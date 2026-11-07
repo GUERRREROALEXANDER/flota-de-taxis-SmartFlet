@@ -1,0 +1,90 @@
+@startuml smartflet-modelo-conceptual
+title Modelo Conceptual y de Dominio — SmartFleet
+
+skinparam defaultFontSize 14
+skinparam dpi 150
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam title {
+  FontSize 20
+  FontStyle bold
+}
+
+package "SmartFleet - Modelo Conceptual" {
+
+  class Usuario {
+    + id: String
+    + nombre: String
+    + email: String
+    + telefono: String
+    + rol: String
+    --
+    + autenticar(): boolean
+  }
+
+  class Conductor {
+    + licencia: String
+    + estado: String
+    --
+    + verificarDisponibilidad(): boolean
+  }
+
+  class Vehiculo {
+    + id: String
+    + placa: String
+    + modelo: String
+    + capacidad: int
+    + tipo: String
+    + estadoOperativo: boolean
+    --
+    + actualizarEstado(): void
+  }
+
+  class Ruta {
+    + id: String
+    + origen: String
+    + destino: String
+    + distanciaKm: float
+    + duracionEstimada: String
+  }
+
+  class Viaje {
+    + id: String
+    + fechaHoraSalida: String
+    + precioBase: float
+    + estado: String
+    --
+    + calcularTarifa(): float
+  }
+
+  class Tiquete {
+    + id: String
+    + numeroAsiento: int
+    + fechaReserva: String
+    + estado: String
+    + precioTotal: float
+    --
+    + confirmarReserva(): void
+  }
+
+  class Pago {
+    + id: String
+    + monto: float
+    + fechaPago: String
+    + metodoPago: String
+    + estado: String
+    --
+    + procesarPago(): boolean
+  }
+
+  ' ---------- Relaciones ----------
+  Usuario <|-- Conductor
+  Conductor "1" --> "0..1" Vehiculo : opera
+  Vehiculo  "1" --> "0..*" Viaje    : atiende
+  Ruta      "1" --> "0..*" Viaje    : define trayecto
+  Viaje     "1" --> "0..*" Tiquete  : genera
+  Usuario   "1" --> "1..*" Tiquete  : realiza reserva
+  Tiquete   "1" --> "1"    Pago     : asocia
+}
+
+@enduml
