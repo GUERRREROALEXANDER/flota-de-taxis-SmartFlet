@@ -1,0 +1,11 @@
+# Archivos temporales de Visual Paradigm
+*.lck
+*.bak_*
+
+# Compilación Java
+*.class
+out/
+target/
+
+# Variables de entorno
+.env
