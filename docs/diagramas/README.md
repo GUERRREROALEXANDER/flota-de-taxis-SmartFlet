@@ -14,11 +14,13 @@ Todos los diagramas están modelados en un solo proyecto: [`smartflet-diagramas.
 
 ## Diagramas
 
-| # | Diagrama | Carpeta | Estado |
-|---|---|---|---|
-| 01 | Clases de dominio | [`01-clases-dominio/`](01-clases-dominio/) | ✅ Hecho |
-| 02 | Componentes | [`02-componentes/`](02-componentes/) | ✅ Hecho |
-| 03 | Modelo conceptual y de dominio | [`03-modelo-conceptual/`](03-modelo-conceptual/) | ✅ Hecho |
+| # | Diagrama | Carpeta | PNG | VPP | Estado |
+|---|---|---|---|---|---|
+| 01 | Clases de dominio | [`01-clases-dominio/`](01-clases-dominio/) | [PNG](01-clases-dominio/smartflet-clases-dominio-vp.png) | [VPP](01-clases-dominio/smartflet-clases-dominio.vpp) | ✅ Hecho |
+| 02 | Componentes | [`02-componentes/`](02-componentes/) | [PNG](02-componentes/smartflet-componentes.png) | [VPP](02-componentes/smartflet-componentes.vpp) | ✅ Hecho |
+| 03 | Modelo conceptual y de dominio | [`03-modelo-conceptual/`](03-modelo-conceptual/) | [PNG](03-modelo-conceptual/smartflet-modelo-conceptual.png) | [VPP](03-modelo-conceptual/smartflet-modelo-conceptual.vpp) | ✅ Hecho |
+
+Cada `.vpp` de carpeta contiene solo su diagrama; `smartflet-diagramas.vpp` los reúne a los tres.
 
 ## Vista previa
 

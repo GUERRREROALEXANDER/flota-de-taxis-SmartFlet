@@ -14,6 +14,7 @@
 5. [Estructura de directorios y componentes principales](#5-estructura-de-directorios-y-componentes-principales)
 6. [Historias de usuario](#6-historias-de-usuario)
 7. [Requerimientos funcionales](#7-requerimientos-funcionales)
+8. [Diagramas UML](#8-diagramas-uml)
 
 ---
 
@@ -361,6 +362,27 @@ Prioridad según la escala **MoSCoW**: **Alta** (imprescindible para el MVP), **
 | RF-20 | Registro de auditoría | El sistema debe registrar las acciones sensibles (asignaciones manuales, cambios de tarifa, altas y bajas) con usuario, fecha y hora. | Baja |
 
 **Alcance:** Agrupa las reglas económicas, la información para la toma de decisiones y los controles de acceso. La tarifa vigente debe quedar fijada en cada viaje para que los cambios futuros no alteren los cobros pasados.
+
+---
+
+## 8. Diagramas UML
+
+Modelados en Visual Paradigm 18.1. Cada diagrama tiene su carpeta en [`docs/diagramas/`](docs/diagramas/) con el `.puml`, el `.png`, el `.vpp` y un README con las decisiones de diseño. El proyecto completo con los tres diagramas es [`smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp).
+
+| # | Diagrama | PNG | VPP |
+|---|---|---|---|
+| 01 | Clases de dominio | [smartflet-clases-dominio-vp.png](docs/diagramas/01-clases-dominio/smartflet-clases-dominio-vp.png) | [smartflet-clases-dominio.vpp](docs/diagramas/01-clases-dominio/smartflet-clases-dominio.vpp) |
+| 02 | Componentes | [smartflet-componentes.png](docs/diagramas/02-componentes/smartflet-componentes.png) | [smartflet-componentes.vpp](docs/diagramas/02-componentes/smartflet-componentes.vpp) |
+| 03 | Modelo conceptual y de dominio | [smartflet-modelo-conceptual.png](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.png) | [smartflet-modelo-conceptual.vpp](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.vpp) |
+
+### 01 — Clases de dominio
+![Clases de dominio](docs/diagramas/01-clases-dominio/smartflet-clases-dominio-vp.png)
+
+### 02 — Componentes
+![Componentes](docs/diagramas/02-componentes/smartflet-componentes.png)
+
+### 03 — Modelo conceptual y de dominio
+![Modelo conceptual](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.png)
 
 ---
 
