@@ -1,0 +1,125 @@
+@startuml smartflet-clases-dominio
+title Modelo de Clases de Dominio — SmartFleet (Gestión de Flota de Taxis)
+
+skinparam defaultFontSize 16
+skinparam dpi 150
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #EAF1FB
+  BorderColor #2C5C8A
+  ArrowColor #2C5C8A
+  FontColor #1B1B1B
+  AttributeFontSize 15
+}
+skinparam title {
+  FontSize 22
+  FontStyle bold
+}
+
+class Pasajero {
+  + idPasajero: Integer
+  + identificacion: String
+  + nombre: String
+  + telefono: String
+  + correoElectronico: String
+  + fechaRegistro: Date
+  + estadoCuenta: String
+  --
+  + registrarPasajero()
+  + modificarDatos()
+  + consultarHistorial()
+  + solicitarViaje()
+  + calificarViaje()
+}
+
+class Conductor {
+  + idConductor: Integer
+  + identificacion: String
+  + nombre: String
+  + numeroLicencia: String
+  + fechaVencimientoLicencia: Date
+  + estadoConductor: String
+  --
+  + registrarConductor()
+  + actualizarEstado()
+  + consultarTurnos()
+}
+
+class Vehiculo {
+  + idVehiculo: Integer
+  + placa: String
+  + marca: String
+  + modelo: String
+  + anio: Integer
+  + estadoVehiculo: String
+  + kilometraje: Integer
+  --
+  + registrarVehiculo()
+  + actualizarEstado()
+  + programarMantenimiento()
+}
+
+class Turno {
+  + idTurno: Integer
+  + fechaInicio: DateTime
+  + fechaFin: DateTime
+  + estado: String
+  --
+  + iniciarTurno()
+  + finalizarTurno()
+}
+
+class Viaje {
+  + idViaje: Integer
+  + origen: String
+  + destino: String
+  + fechaSolicitud: DateTime
+  + fechaInicio: DateTime
+  + fechaFin: DateTime
+  + distanciaKm: Double
+  + estadoViaje: String
+  --
+  + solicitarViaje()
+  + asignarVehiculo()
+  + iniciarViaje()
+  + finalizarViaje()
+  + cancelarViaje()
+}
+
+class Pago {
+  + idPago: Integer
+  + monto: Double
+  + fechaPago: DateTime
+  + metodoPago: String
+  + estadoPago: String
+  --
+  + registrarPago()
+  + generarFactura()
+  + anularPago()
+}
+
+class Tarifa {
+  + idTarifa: Integer
+  + nombre: String
+  + valorBase: Double
+  + valorPorKm: Double
+  + fechaInicioVigencia: Date
+  + fechaFinVigencia: Date
+  + estado: String
+  --
+  + crearTarifa()
+  + modificarTarifa()
+  + desactivarTarifa()
+}
+
+' ---------- Relaciones ----------
+Pasajero    "1"    -- "0..*" Viaje    : solicita >
+Vehiculo    "0..1" -- "0..*" Viaje    : atiende >
+Conductor   "1"    -- "0..*" Turno    : cumple >
+Vehiculo    "1"    -- "0..*" Turno    : es operado en >
+Viaje       "1"    *-- "0..1" Pago    : genera
+Tarifa      "1"    -- "0..*" Viaje    : aplica a >
+
+@enduml
