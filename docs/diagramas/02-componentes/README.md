@@ -8,8 +8,11 @@ Vista de los componentes del sistema, las interfaces que cada uno ofrece y las q
 |---|---|
 | `smartflet-componentes.puml` | Código fuente PlantUML (autocontenido). |
 | `smartflet-componentes.png` | Diagrama exportado desde Visual Paradigm. |
+| `smartflet-componentes.vpp` | Proyecto de Visual Paradigm solo con este diagrama. |
 
-El modelo editable está en [`../smartflet-diagramas.vpp`](../smartflet-diagramas.vpp), diagrama *"02 - Diagrama de Componentes — SmartFleet"*.
+También está en el proyecto completo [`../smartflet-diagramas.vpp`](../smartflet-diagramas.vpp), diagrama *"02 - Diagrama de Componentes — SmartFleet"*.
+
+![Componentes](smartflet-componentes.png)
 
 ## Componentes
 

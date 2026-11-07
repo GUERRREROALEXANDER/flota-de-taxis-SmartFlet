@@ -8,8 +8,11 @@ Modelo conceptual con las entidades del negocio, sus atributos tipados, la heren
 |---|---|
 | `smartflet-modelo-conceptual.puml` | Código fuente PlantUML (autocontenido). |
 | `smartflet-modelo-conceptual.png` | Diagrama exportado desde Visual Paradigm. |
+| `smartflet-modelo-conceptual.vpp` | Proyecto de Visual Paradigm solo con este diagrama. |
 
-El modelo editable está en [`../smartflet-diagramas.vpp`](../smartflet-diagramas.vpp), diagrama *"03 - Modelo Conceptual y de Dominio — SmartFleet"*.
+También está en el proyecto completo [`../smartflet-diagramas.vpp`](../smartflet-diagramas.vpp), diagrama *"03 - Modelo Conceptual y de Dominio — SmartFleet"*.
+
+![Modelo conceptual](smartflet-modelo-conceptual.png)
 
 ## Clases
 

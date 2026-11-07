@@ -9,6 +9,9 @@ Diagrama de clases de dominio del sistema de gestión de flota de taxis **SmartF
 | `smartflet-clases-dominio.puml` | Código fuente PlantUML (autocontenido, sin `!include`). |
 | `smartflet-clases-dominio.png` | Render validado del diagrama (PlantUML). |
 | `smartflet-clases-dominio-vp.png` | El mismo diagrama exportado desde Visual Paradigm. |
+| `smartflet-clases-dominio.vpp` | Proyecto de Visual Paradigm solo con este diagrama. |
+
+![Clases de dominio](smartflet-clases-dominio-vp.png)
 
 ## Equivalencia con la referencia
 
