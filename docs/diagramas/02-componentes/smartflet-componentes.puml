@@ -1,0 +1,55 @@
+@startuml smartflet-componentes
+title Diagrama de Componentes — SmartFleet
+
+skinparam defaultFontSize 14
+skinparam dpi 150
+skinparam shadowing false
+skinparam componentStyle uml2
+skinparam title {
+  FontSize 20
+  FontStyle bold
+}
+
+package "SmartFleet System" {
+
+  component "Autenticación y Seguridad" as Auth <<component>> {
+    port pAuth
+  }
+  component "Gestión de Vehículos" as Veh <<component>> {
+    port pVeh
+    port pVehDB
+  }
+  component "Emisión de Tiquetes y Asientos" as Tiq <<component>> {
+    port pTiq
+  }
+  component "Gestión de Rutas" as Rut <<component>> {
+    port pRut
+    port pRutDB
+  }
+  component "Capa de Persistencia" as Per <<component>> {
+    port pDB
+  }
+
+  interface IAuthService
+  interface IVehicleService
+  interface IRouteService
+  interface ITicketingService
+  interface IDBConnector
+
+  ' ---------- Interfaces proporcionadas ----------
+  pAuth -- IAuthService
+  pVeh  -- IVehicleService
+  pRut  -- IRouteService
+  pTiq  -- ITicketingService
+  pDB   -- IDBConnector
+
+  ' ---------- Interfaces requeridas ----------
+  Tiq ..> IAuthService
+  Tiq ..> IVehicleService
+  Tiq ..> IRouteService
+  Tiq ..> IDBConnector
+  pVehDB ..> IDBConnector
+  pRutDB ..> IDBConnector
+}
+
+@enduml
