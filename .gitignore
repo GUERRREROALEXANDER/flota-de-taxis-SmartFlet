@@ -7,5 +7,17 @@
 out/
 target/
 
+# mvnw lo vuelve a descargar solo si falta: no hace falta versionarlo
+backend/.mvn/wrapper/maven-wrapper.jar
+
 # Variables de entorno
 .env
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
