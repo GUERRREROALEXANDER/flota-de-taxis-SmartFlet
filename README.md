@@ -67,6 +67,8 @@
 | Capa | Tecnología propuesta | Motivo |
 |---|---|---|
 | Lenguaje principal (backend) | Java 26 | Lenguaje principal del equipo; JDK ya instalado en el entorno. |
+| Framework backend | Spring Boot | API REST, inyección de dependencias, acceso a datos (Spring Data JPA) y WebSocket en un solo framework estándar del ecosistema Java. |
+| Gestor de dependencias / build | Maven (`mvnw`) | Build reproducible sin instalar Maven localmente; ya referenciado en los comandos de ejecución. |
 | Frontend web | HTML, CSS y JavaScript | Interfaz de central y de conductor desde navegador, sin instalación. |
 | Base de datos | PostgreSQL | Relacional, robusta y con soporte para datos geoespaciales (PostGIS). |
 | Mapas y geolocalización | API de mapas (por definir) | Visualización de la flota y cálculo de distancias. |
