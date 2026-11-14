@@ -8,21 +8,21 @@ import smartflet.modelo.MetodoPago;
 import smartflet.modelo.Pago;
 
 /**
- * Datos de un pago que se devuelven al cliente.
+ * Datos de un pago que se devuelven al cliente. viajeId sale del viaje que contiene al pago.
  */
 public record PagoRespuesta(
-        Long id,
-        Long viajeId,
+        String id,
+        String viajeId,
         BigDecimal monto,
         LocalDateTime fechaPago,
         MetodoPago metodoPago,
         EstadoPago estadoPago
 ) {
 
-    public static PagoRespuesta desde(Pago pago) {
+    public static PagoRespuesta desde(Pago pago, String viajeId) {
         return new PagoRespuesta(
                 pago.getId(),
-                pago.getViaje().getId(),
+                viajeId,
                 pago.getMonto(),
                 pago.getFechaPago(),
                 pago.getMetodoPago(),

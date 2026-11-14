@@ -1,36 +1,26 @@
 package smartflet.modelo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Trayecto entre un origen y un destino. Atributos tomados del modelo conceptual (diagrama 03).
+ * Trayecto entre un origen y un destino.
  */
-@Entity
-@Table(name = "ruta")
+@Document(collection = "rutas")
 public class Ruta {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, length = 100)
     private String origen;
 
-    @Column(nullable = false, length = 100)
     private String destino;
 
-    @Column(name = "distancia_km", nullable = false)
     private Double distanciaKm;
 
-    @Column(name = "duracion_estimada_minutos", nullable = false)
     private Integer duracionEstimadaMinutos;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Ruta() {
     }
 
@@ -41,7 +31,7 @@ public class Ruta {
         this.duracionEstimadaMinutos = duracionEstimadaMinutos;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

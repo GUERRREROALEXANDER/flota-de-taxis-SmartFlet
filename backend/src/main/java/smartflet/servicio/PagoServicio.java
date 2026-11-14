@@ -3,46 +3,45 @@ package smartflet.servicio;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.PagoRespuesta;
 import smartflet.excepcion.RecursoNoEncontradoException;
-import smartflet.modelo.Pago;
-import smartflet.repositorio.PagoRepositorio;
+import smartflet.modelo.Viaje;
+import smartflet.repositorio.ViajeRepositorio;
 
 /**
- * Consulta y anulacion de pagos. Los pagos no se crean aqui: los crea el viaje al finalizar.
+ * Consulta y anulacion de pagos. El pago vive embebido en su Viaje, asi que se lee y se guarda
+ * a traves de ViajeRepositorio. Los pagos no se crean aqui: los crea el viaje al finalizar.
  */
 @Service
 public class PagoServicio {
 
-    private final PagoRepositorio pagoRepositorio;
+    private final ViajeRepositorio viajeRepositorio;
 
-    public PagoServicio(PagoRepositorio pagoRepositorio) {
-        this.pagoRepositorio = pagoRepositorio;
+    public PagoServicio(ViajeRepositorio viajeRepositorio) {
+        this.viajeRepositorio = viajeRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<PagoRespuesta> listarTodos() {
-        return pagoRepositorio.findAll().stream()
-                .map(PagoRespuesta::desde)
+        return viajeRepositorio.findByPagoIsNotNull().stream()
+                .map(viaje -> PagoRespuesta.desde(viaje.getPago(), viaje.getId()))
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public PagoRespuesta buscarPorId(Long id) {
-        return PagoRespuesta.desde(obtenerPago(id));
+    public PagoRespuesta buscarPorId(String id) {
+        Viaje viaje = obtenerViajeDelPago(id);
+        return PagoRespuesta.desde(viaje.getPago(), viaje.getId());
     }
 
-    @Transactional
-    public PagoRespuesta anular(Long id) {
-        Pago pago = obtenerPago(id);
-        pago.anularPago();
-        return PagoRespuesta.desde(pagoRepositorio.save(pago));
+    public PagoRespuesta anular(String id) {
+        Viaje viaje = obtenerViajeDelPago(id);
+        viaje.getPago().anularPago();
+        Viaje guardado = viajeRepositorio.save(viaje);
+        return PagoRespuesta.desde(guardado.getPago(), guardado.getId());
     }
 
-    private Pago obtenerPago(Long id) {
-        return pagoRepositorio.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", id));
+    private Viaje obtenerViajeDelPago(String pagoId) {
+        return viajeRepositorio.findByPagoId(pagoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", pagoId));
     }
 }

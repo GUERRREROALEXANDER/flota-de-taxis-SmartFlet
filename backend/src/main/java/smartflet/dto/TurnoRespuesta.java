@@ -9,11 +9,9 @@ import smartflet.modelo.Turno;
  * Datos de un turno que se devuelven al cliente.
  */
 public record TurnoRespuesta(
-        Long id,
-        Long conductorId,
-        String conductorNombre,
-        Long vehiculoId,
-        String vehiculoPlaca,
+        String id,
+        String conductorId,
+        String vehiculoId,
         LocalDateTime fechaInicio,
         LocalDateTime fechaFin,
         EstadoTurno estado
@@ -22,10 +20,8 @@ public record TurnoRespuesta(
     public static TurnoRespuesta desde(Turno turno) {
         return new TurnoRespuesta(
                 turno.getId(),
-                turno.getConductor().getId(),
-                turno.getConductor().getNombre(),
-                turno.getVehiculo().getId(),
-                turno.getVehiculo().getPlaca(),
+                turno.getConductorId(),
+                turno.getVehiculoId(),
                 turno.getFechaInicio(),
                 turno.getFechaFin(),
                 turno.getEstado());

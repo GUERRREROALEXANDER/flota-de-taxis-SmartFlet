@@ -59,12 +59,12 @@ class VehiculoYRutaControladorTests {
     }
 
     @Test
-    void placaRepetidaDevuelve400() throws Exception {
+    void placaRepetidaDevuelve409() throws Exception {
         mockMvc.perform(post("/api/vehiculos").contentType(MediaType.APPLICATION_JSON).content(VEHICULO_VALIDO))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/vehiculos").contentType(MediaType.APPLICATION_JSON).content(VEHICULO_VALIDO))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.mensaje").value("Ya existe un vehiculo con la placa ABC123"));
     }
 
@@ -95,7 +95,7 @@ class VehiculoYRutaControladorTests {
         String creado = mockMvc.perform(post("/api/vehiculos")
                         .contentType(MediaType.APPLICATION_JSON).content(VEHICULO_VALIDO))
                 .andReturn().getResponse().getContentAsString();
-        String id = creado.replaceAll(".*\"id\":(\\d+).*", "$1");
+        String id = creado.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
         mockMvc.perform(patch("/api/vehiculos/" + id + "/estado")
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estadoOperativo\": false}"))
@@ -115,7 +115,7 @@ class VehiculoYRutaControladorTests {
                         .contentType(MediaType.APPLICATION_JSON).content(RUTA_VALIDA))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        String id = creada.replaceAll(".*\"id\":(\\d+).*", "$1");
+        String id = creada.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
         mockMvc.perform(get("/api/rutas").param("origen", "term"))
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -143,8 +143,8 @@ class VehiculoYRutaControladorTests {
     }
 
     @Test
-    void idNoNumericoYJsonMalFormadoDevuelven400() throws Exception {
-        mockMvc.perform(get("/api/rutas/abc")).andExpect(status().isBadRequest());
+    void idInexistenteDevuelve404YJsonMalFormadoDevuelve400() throws Exception {
+        mockMvc.perform(get("/api/rutas/abc")).andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/rutas").contentType(MediaType.APPLICATION_JSON).content("{origen:"))
                 .andExpect(status().isBadRequest());

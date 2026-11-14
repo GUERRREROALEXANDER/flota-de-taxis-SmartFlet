@@ -33,14 +33,14 @@ public class TurnoControlador {
 
     /** GET /api/turnos  o  GET /api/turnos?conductorId=1 */
     @GetMapping
-    public ResponseEntity<List<TurnoRespuesta>> listar(@RequestParam(required = false) Long conductorId) {
+    public ResponseEntity<List<TurnoRespuesta>> listar(@RequestParam(required = false) String conductorId) {
         return ResponseEntity.ok(conductorId == null
                 ? turnoServicio.listarTodos()
                 : turnoServicio.listarPorConductor(conductorId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TurnoRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<TurnoRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(turnoServicio.buscarPorId(id));
     }
 
@@ -51,12 +51,12 @@ public class TurnoControlador {
     }
 
     @PatchMapping("/{id}/iniciar")
-    public ResponseEntity<TurnoRespuesta> iniciar(@PathVariable Long id) {
+    public ResponseEntity<TurnoRespuesta> iniciar(@PathVariable String id) {
         return ResponseEntity.ok(turnoServicio.iniciar(id));
     }
 
     @PatchMapping("/{id}/finalizar")
-    public ResponseEntity<TurnoRespuesta> finalizar(@PathVariable Long id) {
+    public ResponseEntity<TurnoRespuesta> finalizar(@PathVariable String id) {
         return ResponseEntity.ok(turnoServicio.finalizar(id));
     }
 }

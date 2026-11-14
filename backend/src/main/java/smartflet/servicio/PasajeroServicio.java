@@ -3,12 +3,11 @@ package smartflet.servicio;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.PasajeroRespuesta;
 import smartflet.dto.PasajeroSolicitud;
+import smartflet.excepcion.RecursoDuplicadoException;
 import smartflet.excepcion.RecursoNoEncontradoException;
-import smartflet.excepcion.ReglaNegocioException;
 import smartflet.modelo.EstadoRegistro;
 import smartflet.modelo.Pasajero;
 import smartflet.repositorio.PasajeroRepositorio;
@@ -25,35 +24,31 @@ public class PasajeroServicio {
         this.pasajeroRepositorio = pasajeroRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<PasajeroRespuesta> listarTodos() {
         return pasajeroRepositorio.findAll().stream()
                 .map(PasajeroRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public PasajeroRespuesta buscarPorId(Long id) {
+    public PasajeroRespuesta buscarPorId(String id) {
         return PasajeroRespuesta.desde(obtenerPasajero(id));
     }
 
-    @Transactional
     public PasajeroRespuesta registrar(PasajeroSolicitud solicitud) {
         String identificacion = solicitud.identificacion().trim();
         if (pasajeroRepositorio.existsByIdentificacion(identificacion)) {
-            throw new ReglaNegocioException("Ya existe un pasajero con la identificacion " + identificacion);
+            throw new RecursoDuplicadoException("Ya existe un pasajero con la identificacion " + identificacion);
         }
         Pasajero pasajero = new Pasajero(identificacion, solicitud.nombre().trim(),
                 solicitud.telefono().trim(), solicitud.correoElectronico().trim().toLowerCase());
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    @Transactional
-    public PasajeroRespuesta modificarDatos(Long id, PasajeroSolicitud solicitud) {
+    public PasajeroRespuesta modificarDatos(String id, PasajeroSolicitud solicitud) {
         Pasajero pasajero = obtenerPasajero(id);
         String identificacion = solicitud.identificacion().trim();
         if (pasajeroRepositorio.existsByIdentificacionAndIdNot(identificacion, id)) {
-            throw new ReglaNegocioException("Ya existe otro pasajero con la identificacion " + identificacion);
+            throw new RecursoDuplicadoException("Ya existe otro pasajero con la identificacion " + identificacion);
         }
         pasajero.setIdentificacion(identificacion);
         pasajero.setNombre(solicitud.nombre().trim());
@@ -62,14 +57,13 @@ public class PasajeroServicio {
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    @Transactional
-    public PasajeroRespuesta cambiarEstado(Long id, EstadoRegistro estado) {
+    public PasajeroRespuesta cambiarEstado(String id, EstadoRegistro estado) {
         Pasajero pasajero = obtenerPasajero(id);
         pasajero.setEstadoCuenta(estado);
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    private Pasajero obtenerPasajero(Long id) {
+    private Pasajero obtenerPasajero(String id) {
         return pasajeroRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pasajero", id));
     }

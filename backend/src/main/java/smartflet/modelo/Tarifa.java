@@ -4,47 +4,38 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 /**
  * Precio del servicio: valor base + valor por kilometro, vigente entre dos fechas.
  * Si fechaFinVigencia es null, la tarifa no tiene fecha de fin.
+ * Cada Viaje guarda una COPIA embebida de la tarifa vigente al solicitarlo: si la tarifa cambia despues,
+ * el precio de ese viaje no cambia.
  */
-@Entity
-@Table(name = "tarifa")
+@Document(collection = "tarifas")
 public class Tarifa {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, length = 60)
     private String nombre;
 
-    @Column(name = "valor_base", nullable = false, precision = 12, scale = 2)
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal valorBase;
 
-    @Column(name = "valor_por_km", nullable = false, precision = 12, scale = 2)
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal valorPorKm;
 
-    @Column(name = "fecha_inicio_vigencia", nullable = false)
     private LocalDate fechaInicioVigencia;
 
-    @Column(name = "fecha_fin_vigencia")
     private LocalDate fechaFinVigencia;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
     private EstadoRegistro estado;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Tarifa() {
     }
 
@@ -69,7 +60,7 @@ public class Tarifa {
         this.estado = EstadoRegistro.INACTIVO;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

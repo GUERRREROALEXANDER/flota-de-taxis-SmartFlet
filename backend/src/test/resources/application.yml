@@ -1,0 +1,13 @@
+# Configuracion SOLO para las pruebas: reemplaza a src/main/resources/application.yml.
+# No define spring.data.mongodb.uri, asi Spring usa el MongoDB embebido de flapdoodle
+# y nunca toca Atlas ni la base local.
+spring:
+  data:
+    mongodb:
+      auto-index-creation: true
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 7.0.4

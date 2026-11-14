@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -37,6 +38,17 @@ public class ManejadorGlobalExcepciones {
         return responder(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ResponseEntity<ErrorRespuesta> manejarDuplicado(RecursoDuplicadoException ex) {
+        return responder(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /** Respaldo: el indice unico de MongoDB rechazo un dato repetido (ej. dos altas simultaneas). */
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ErrorRespuesta> manejarClaveDuplicada(DuplicateKeyException ex) {
+        return responder(HttpStatus.CONFLICT, "Ya existe un registro con ese valor unico");
+    }
+
     /** Falla de @Valid: devuelve cada campo con su mensaje. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorRespuesta> manejarValidacion(MethodArgumentNotValidException ex) {
@@ -54,7 +66,7 @@ public class ManejadorGlobalExcepciones {
         return responder(HttpStatus.BAD_REQUEST, "El cuerpo de la peticion no es un JSON valido");
     }
 
-    /** Id en la URL que no es numero, ej. /api/vehiculos/abc */
+    /** Parametro con un valor del tipo equivocado, ej. /api/viajes?estado=VOLANDO */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorRespuesta> manejarTipoIncorrecto(MethodArgumentTypeMismatchException ex) {
         return responder(HttpStatus.BAD_REQUEST,

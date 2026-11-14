@@ -2,80 +2,61 @@ package smartflet.modelo;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import smartflet.excepcion.ReglaNegocioException;
 
 /**
  * Viaje de un pasajero: desde que se solicita hasta que finaliza o se cancela.
  * No tiene setters: el estado solo cambia con asignarVehiculo, iniciarViaje, finalizarViaje y cancelarViaje,
- * que validan las transiciones. Al finalizar crea su Pago (composicion: el pago no existe sin el viaje).
+ * que validan las transiciones.
+ *
+ * Modelo en MongoDB (un solo documento por viaje):
+ * - pasajeroId y vehiculoId: referencias por id.
+ * - tarifa: COPIA embebida de la tarifa vigente al solicitar, para que el precio no cambie si la tarifa se modifica.
+ * - pago: subdocumento embebido (composicion: el pago no existe sin el viaje). Finalizar escribe viaje y pago
+ *   en una sola operacion atomica sobre el mismo documento.
  */
-@Entity
-@Table(name = "viaje")
+@Document(collection = "viajes")
 public class Viaje {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pasajero_id", nullable = false)
-    private Pasajero pasajero;
+    @Indexed
+    private String pasajeroId;
 
     /** Null mientras el viaje esta SOLICITADO. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehiculo_id")
-    private Vehiculo vehiculo;
+    @Indexed
+    private String vehiculoId;
 
-    /** Tarifa vigente al solicitar; queda fija aunque la tarifa cambie despues. */
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tarifa_id", nullable = false)
     private Tarifa tarifa;
 
-    @Column(nullable = false, length = 150)
     private String origen;
 
-    @Column(nullable = false, length = 150)
     private String destino;
 
-    @Column(name = "fecha_solicitud", nullable = false)
     private LocalDateTime fechaSolicitud;
 
-    @Column(name = "fecha_inicio")
     private LocalDateTime fechaInicio;
 
-    @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
 
-    @Column(name = "distancia_km")
     private Double distanciaKm;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "estado_viaje", nullable = false, length = 12)
     private EstadoViaje estadoViaje;
 
-    @OneToOne(mappedBy = "viaje", cascade = CascadeType.ALL, orphanRemoval = true)
     private Pago pago;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Viaje() {
     }
 
-    /** Solicitar un viaje: queda SOLICITADO, sin vehiculo. */
-    public Viaje(Pasajero pasajero, Tarifa tarifa, String origen, String destino) {
-        this.pasajero = pasajero;
+    /** Solicitar un viaje: queda SOLICITADO, sin vehiculo, con la tarifa fijada. */
+    public Viaje(String pasajeroId, Tarifa tarifa, String origen, String destino) {
+        this.pasajeroId = pasajeroId;
         this.tarifa = tarifa;
         this.origen = origen;
         this.destino = destino;
@@ -89,7 +70,7 @@ public class Viaje {
             throw new ReglaNegocioException(
                     "Solo se puede asignar un vehiculo a un viaje SOLICITADO o ASIGNADO (estado actual: " + estadoViaje + ")");
         }
-        this.vehiculo = vehiculo;
+        this.vehiculoId = vehiculo.getId();
         this.estadoViaje = EstadoViaje.ASIGNADO;
     }
 
@@ -105,7 +86,7 @@ public class Viaje {
         this.distanciaKm = distanciaKm;
         this.fechaFin = LocalDateTime.now();
         this.estadoViaje = EstadoViaje.FINALIZADO;
-        this.pago = new Pago(this, tarifa.calcularPrecio(distanciaKm), metodoPago);
+        this.pago = new Pago(tarifa.calcularPrecio(distanciaKm), metodoPago);
         return pago;
     }
 
@@ -125,16 +106,16 @@ public class Viaje {
         }
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public Pasajero getPasajero() {
-        return pasajero;
+    public String getPasajeroId() {
+        return pasajeroId;
     }
 
-    public Vehiculo getVehiculo() {
-        return vehiculo;
+    public String getVehiculoId() {
+        return vehiculoId;
     }
 
     public Tarifa getTarifa() {

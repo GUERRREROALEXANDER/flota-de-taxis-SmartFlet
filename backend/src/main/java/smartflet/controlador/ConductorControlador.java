@@ -43,7 +43,7 @@ public class ConductorControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ConductorRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ConductorRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(conductorServicio.buscarPorId(id));
     }
 
@@ -54,13 +54,13 @@ public class ConductorControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ConductorRespuesta> actualizar(@PathVariable Long id,
+    public ResponseEntity<ConductorRespuesta> actualizar(@PathVariable String id,
                                                          @Valid @RequestBody ConductorSolicitud solicitud) {
         return ResponseEntity.ok(conductorServicio.actualizar(id, solicitud));
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<ConductorRespuesta> cambiarEstado(@PathVariable Long id,
+    public ResponseEntity<ConductorRespuesta> cambiarEstado(@PathVariable String id,
                                                             @Valid @RequestBody EstadoRegistroSolicitud solicitud) {
         return ResponseEntity.ok(conductorServicio.cambiarEstado(id, solicitud.estado()));
     }

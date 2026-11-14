@@ -1,20 +1,22 @@
 package smartflet.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import smartflet.modelo.EstadoViaje;
 import smartflet.modelo.Viaje;
 
 /**
- * Datos de un viaje que se devuelven al cliente. vehiculo y pago son null mientras no existan.
+ * Datos de un viaje que se devuelven al cliente. vehiculoId y pago son null mientras no existan.
+ * tarifaValorBase y tarifaValorPorKm son los valores fijados al solicitar el viaje.
  */
 public record ViajeRespuesta(
-        Long id,
-        Long pasajeroId,
-        String pasajeroNombre,
-        Long vehiculoId,
-        String vehiculoPlaca,
-        Long tarifaId,
+        String id,
+        String pasajeroId,
+        String vehiculoId,
+        String tarifaId,
+        BigDecimal tarifaValorBase,
+        BigDecimal tarifaValorPorKm,
         String origen,
         String destino,
         LocalDateTime fechaSolicitud,
@@ -26,14 +28,13 @@ public record ViajeRespuesta(
 ) {
 
     public static ViajeRespuesta desde(Viaje viaje) {
-        boolean conVehiculo = viaje.getVehiculo() != null;
         return new ViajeRespuesta(
                 viaje.getId(),
-                viaje.getPasajero().getId(),
-                viaje.getPasajero().getNombre(),
-                conVehiculo ? viaje.getVehiculo().getId() : null,
-                conVehiculo ? viaje.getVehiculo().getPlaca() : null,
+                viaje.getPasajeroId(),
+                viaje.getVehiculoId(),
                 viaje.getTarifa().getId(),
+                viaje.getTarifa().getValorBase(),
+                viaje.getTarifa().getValorPorKm(),
                 viaje.getOrigen(),
                 viaje.getDestino(),
                 viaje.getFechaSolicitud(),
@@ -41,6 +42,6 @@ public record ViajeRespuesta(
                 viaje.getFechaFin(),
                 viaje.getDistanciaKm(),
                 viaje.getEstadoViaje(),
-                viaje.getPago() != null ? PagoRespuesta.desde(viaje.getPago()) : null);
+                viaje.getPago() != null ? PagoRespuesta.desde(viaje.getPago(), viaje.getId()) : null);
     }
 }

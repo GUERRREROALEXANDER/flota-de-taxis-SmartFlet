@@ -45,7 +45,7 @@ public class VehiculoControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VehiculoRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<VehiculoRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(vehiculoServicio.buscarPorId(id));
     }
 
@@ -57,20 +57,20 @@ public class VehiculoControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<VehiculoRespuesta> actualizar(@PathVariable Long id,
+    public ResponseEntity<VehiculoRespuesta> actualizar(@PathVariable String id,
                                                         @Valid @RequestBody VehiculoSolicitud solicitud) {
         return ResponseEntity.ok(vehiculoServicio.actualizar(id, solicitud));
     }
 
     /** Cambia solo el estado operativo (actualizarEstado() del modelo conceptual). */
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<VehiculoRespuesta> cambiarEstado(@PathVariable Long id,
+    public ResponseEntity<VehiculoRespuesta> cambiarEstado(@PathVariable String id,
                                                            @Valid @RequestBody EstadoVehiculoSolicitud solicitud) {
         return ResponseEntity.ok(vehiculoServicio.cambiarEstado(id, solicitud.estadoOperativo()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         vehiculoServicio.eliminar(id);
         return ResponseEntity.noContent().build();
     }

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.FinalizacionViajeSolicitud;
 import smartflet.dto.ViajeRespuesta;
@@ -50,14 +49,12 @@ public class ViajeServicio {
         this.turnoRepositorio = turnoRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<ViajeRespuesta> listarTodos() {
         return viajeRepositorio.findAll().stream()
                 .map(ViajeRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<ViajeRespuesta> listarPorEstado(EstadoViaje estado) {
         return viajeRepositorio.findByEstadoViaje(estado).stream()
                 .map(ViajeRespuesta::desde)
@@ -65,19 +62,16 @@ public class ViajeServicio {
     }
 
     /** consultarHistorial() del pasajero. */
-    @Transactional(readOnly = true)
-    public List<ViajeRespuesta> listarPorPasajero(Long pasajeroId) {
+    public List<ViajeRespuesta> listarPorPasajero(String pasajeroId) {
         return viajeRepositorio.findByPasajeroIdOrderByFechaSolicitudDesc(pasajeroId).stream()
                 .map(ViajeRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public ViajeRespuesta buscarPorId(Long id) {
+    public ViajeRespuesta buscarPorId(String id) {
         return ViajeRespuesta.desde(obtenerViaje(id));
     }
 
-    @Transactional
     public ViajeRespuesta solicitar(ViajeSolicitud solicitud) {
         Pasajero pasajero = pasajeroRepositorio.findById(solicitud.pasajeroId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pasajero", solicitud.pasajeroId()));
@@ -93,13 +87,12 @@ public class ViajeServicio {
                 .findFirst()
                 .orElseThrow(() -> new ReglaNegocioException("No hay una tarifa vigente: no se pueden solicitar viajes"));
 
-        Viaje viaje = new Viaje(pasajero, tarifa, origen, destino);
+        Viaje viaje = new Viaje(pasajero.getId(), tarifa, origen, destino);
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
     /** Solo vehiculos operativos, con un turno EN_CURSO y sin otro viaje activo. */
-    @Transactional
-    public ViajeRespuesta asignarVehiculo(Long id, Long vehiculoId) {
+    public ViajeRespuesta asignarVehiculo(String id, String vehiculoId) {
         Viaje viaje = obtenerViaje(id);
         Vehiculo vehiculo = vehiculoRepositorio.findById(vehiculoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Vehiculo", vehiculoId));
@@ -118,29 +111,26 @@ public class ViajeServicio {
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    @Transactional
-    public ViajeRespuesta iniciar(Long id) {
+    public ViajeRespuesta iniciar(String id) {
         Viaje viaje = obtenerViaje(id);
         viaje.iniciarViaje();
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    /** Finaliza el viaje; el Pago se crea en cascada con el monto de la tarifa fijada. */
-    @Transactional
-    public ViajeRespuesta finalizar(Long id, FinalizacionViajeSolicitud solicitud) {
+    /** Finaliza el viaje; el Pago queda embebido en el mismo documento (una sola escritura atomica). */
+    public ViajeRespuesta finalizar(String id, FinalizacionViajeSolicitud solicitud) {
         Viaje viaje = obtenerViaje(id);
         viaje.finalizarViaje(solicitud.distanciaKm(), solicitud.metodoPago());
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    @Transactional
-    public ViajeRespuesta cancelar(Long id) {
+    public ViajeRespuesta cancelar(String id) {
         Viaje viaje = obtenerViaje(id);
         viaje.cancelarViaje();
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    private Viaje obtenerViaje(Long id) {
+    private Viaje obtenerViaje(String id) {
         return viajeRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Viaje", id));
     }

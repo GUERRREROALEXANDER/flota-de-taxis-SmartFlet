@@ -30,18 +30,11 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- Persistencia con JPA/Hibernate (repositorios JpaRepository) -->
+    <!-- Persistencia en MongoDB (documentos + repositorios MongoRepository).
+         La URI sale de la variable de entorno MONGODB_URI (Atlas o local). -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-
-    <!-- Base de datos en memoria: el proyecto corre sin instalar nada.
-         Para pasar a PostgreSQL se cambia este driver y la URL en application.yml. -->
-    <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <scope>runtime</scope>
+      <artifactId>spring-boot-starter-data-mongodb</artifactId>
     </dependency>
 
     <!-- Validacion de datos de entrada (@NotNull, @Email, @Size) -->
@@ -54,6 +47,15 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- MongoDB embebido para las pruebas: descarga un mongod real la primera vez,
+         asi los tests no dependen de Atlas ni de tener Mongo instalado. -->
+    <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo.spring3x</artifactId>
+      <version>4.16.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

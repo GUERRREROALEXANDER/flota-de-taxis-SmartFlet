@@ -1,40 +1,31 @@
 package smartflet.modelo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Taxi de la flota. Atributos tomados del modelo conceptual (diagrama 03).
+ * Taxi de la flota.
  */
-@Entity
-@Table(name = "vehiculo")
+@Document(collection = "vehiculos")
 public class Vehiculo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, unique = true, length = 10)
+    @Indexed(unique = true)
     private String placa;
 
-    @Column(nullable = false, length = 60)
     private String modelo;
 
-    @Column(nullable = false)
     private Integer capacidad;
 
-    @Column(nullable = false, length = 30)
     private String tipo;
 
     /** true = disponible para operar; false = fuera de servicio. */
-    @Column(name = "estado_operativo", nullable = false)
     private Boolean estadoOperativo;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Vehiculo() {
     }
 
@@ -46,7 +37,7 @@ public class Vehiculo {
         this.estadoOperativo = estadoOperativo;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

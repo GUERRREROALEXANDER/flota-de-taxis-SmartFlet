@@ -9,7 +9,7 @@ import smartflet.modelo.Pasajero;
  * Datos de un pasajero que se devuelven al cliente.
  */
 public record PasajeroRespuesta(
-        Long id,
+        String id,
         String identificacion,
         String nombre,
         String telefono,
