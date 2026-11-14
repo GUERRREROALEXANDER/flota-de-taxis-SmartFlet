@@ -1,7 +1,7 @@
 # SmartFlet — Sistema de gestión de flota de taxis
 
-> **Estado:** En planificación. El repositorio contiene la documentación inicial; el código aún no ha sido desarrollado.
-> Las secciones marcadas como **(propuesta)** son decisiones de diseño tentativas que se confirmarán durante la fase de análisis.
+> **Estado:** En desarrollo. Backend Spring Boot con API REST sobre MongoDB (vehículos, rutas, pasajeros, conductores, turnos, tarifas, viajes y pagos) y frontend web para vehículos, rutas y el tablero de la flota.
+> Lo que aún no está implementado se indica como **(pendiente)**.
 
 ---
 
@@ -11,7 +11,7 @@
 2. [Alcance del proyecto](#2-alcance-del-proyecto)
 3. [Tecnologías y arquitectura](#3-tecnologías-y-arquitectura)
 4. [Instalación, configuración y ejecución](#4-instalación-configuración-y-ejecución)
-5. [Estructura de directorios y componentes principales](#5-estructura-de-directorios-y-componentes-principales)
+5. [Estructura de directorios](#5-estructura-de-directorios)
 6. [Historias de usuario](#6-historias-de-usuario)
 7. [Requerimientos funcionales](#7-requerimientos-funcionales)
 8. [Diagramas UML](#8-diagramas-uml)
@@ -60,144 +60,140 @@
 
 ## 3. Tecnologías y arquitectura
 
-> **(propuesta)** Stack tentativo, alineado con la experiencia del equipo en Java.
-
 ### Tecnologías
 
-| Capa | Tecnología propuesta | Motivo |
+| Capa | Tecnología | Uso |
 |---|---|---|
-| Lenguaje principal (backend) | Java 26 | Lenguaje principal del equipo; JDK ya instalado en el entorno. |
-| Framework backend | Spring Boot | API REST, inyección de dependencias, acceso a datos (Spring Data JPA) y WebSocket en un solo framework estándar del ecosistema Java. |
-| Gestor de dependencias / build | Maven (`mvnw`) | Build reproducible sin instalar Maven localmente; ya referenciado en los comandos de ejecución. |
-| Frontend web | HTML, CSS y JavaScript | Interfaz de central y de conductor desde navegador, sin instalación. |
-| Base de datos | PostgreSQL | Relacional, robusta y con soporte para datos geoespaciales (PostGIS). |
-| Mapas y geolocalización | API de mapas (por definir) | Visualización de la flota y cálculo de distancias. |
-| Control de versiones | Git y GitHub | Repositorio oficial del proyecto. |
+| Backend | Java (compila a 21; JDK 26 instalado) + Spring Boot 3.3.5 | API REST, validación (Bean Validation), inyección de dependencias. |
+| Persistencia | Spring Data MongoDB | Documentos `@Document` y repositorios `MongoRepository`. |
+| Base de datos | MongoDB (Atlas o local) | Conexión por la variable de entorno `MONGODB_URI`. |
+| Pruebas | JUnit 5, MockMvc, MongoDB embebido (flapdoodle) | Las pruebas levantan su propio `mongod`; no tocan Atlas. |
+| Build | Maven Wrapper (`mvnw`) | No hace falta instalar Maven. |
+| Frontend | JavaScript puro + Vite, Three.js, GSAP | Proyecto aparte en `frontend/` (ver su README). |
 
 ### Arquitectura
 
-> **(propuesta)** Arquitectura en capas con API REST, orientada a eventos para la ubicación en tiempo real.
-
 ```
-┌──────────────────────────────────────────────────────────┐
-│ Clientes: Web de central · App/Web de conductor · Pasajero│
-└───────────────┬──────────────────────────┬───────────────┘
-                │ HTTP/REST                │ WebSocket
-┌───────────────▼──────────────────────────▼───────────────┐
-│                    Backend (Java)                         │
-│  Controladores REST ─ Servicios de negocio ─ Repositorios │
-│  Módulo de despacho · Módulo de ubicación · Módulo de     │
-│  reportes                                                 │
-└───────────────────────────┬──────────────────────────────┘
-                            │ JDBC
-                  ┌─────────▼─────────┐
-                  │    PostgreSQL     │
-                  └───────────────────┘
+ Navegador ──HTTP──► Vite :5173 ──proxy /api──► Backend Spring Boot :8080 ──driver MongoDB──► MongoDB (Atlas / local)
+                                                  Controlador → Servicio → Repositorio
 ```
 
-Principios de diseño:
+- **Controladores** (`controlador/`): solo reciben la petición HTTP, validan el cuerpo con `@Valid` y devuelven el código de estado.
+- **Servicios** (`servicio/`): reglas de negocio que necesitan consultar datos (placa única, turno en curso, tarifa vigente…).
+- **Modelo** (`modelo/`): documentos de MongoDB. `Viaje`, `Turno` y `Pago` validan sus propias transiciones de estado.
+- **Repositorios** (`repositorio/`): interfaces `MongoRepository`; Spring genera la implementación.
+- **Errores** (`excepcion/ManejadorGlobalExcepciones`): convierte toda excepción en un JSON `ErrorRespuesta`.
 
-- **Separación por capas:** controladores, servicios de negocio y acceso a datos.
-- **Dominio independiente de la infraestructura:** las reglas de asignación no dependen de la base de datos ni del framework web.
-- **Ubicación en tiempo real:** los conductores envían su posición periódicamente; la central la recibe por WebSocket.
+### Modelo de datos en MongoDB
+
+| Colección | Documento | Relaciones |
+|---|---|---|
+| `vehiculos` | Vehiculo (placa única) | — |
+| `rutas` | Ruta | — |
+| `pasajeros` | Pasajero (identificación única) | — |
+| `conductores` | Conductor (identificación y licencia únicas) | — |
+| `tarifas` | Tarifa (valores en `Decimal128`) | — |
+| `turnos` | Turno | `conductorId`, `vehiculoId` (referencias) |
+| `viajes` | Viaje | `pasajeroId`, `vehiculoId` (referencias); **copia embebida** de la tarifa; **pago embebido** |
+
+Decisiones:
+- El **pago vive dentro del viaje** (composición). Finalizar un viaje escribe viaje y pago en un solo documento, sin necesitar transacciones.
+- El viaje guarda una **copia de la tarifa** vigente al solicitarlo, así el precio no cambia si después se modifica la tarifa.
+- No se usa `@Transactional`: cada operación escribe un único documento, y las transacciones de MongoDB exigen un *replica set*.
+
+### Códigos HTTP
+
+| Código | Cuándo |
+|---|---|
+| 200 OK | Consultas y modificaciones correctas. |
+| 201 Created | Creación (`POST`), con cabecera `Location`. |
+| 204 No Content | Eliminación correcta. |
+| 400 Bad Request | Campos inválidos (con detalle por campo), JSON mal escrito o regla de negocio incumplida (licencia vencida, viaje que no se puede finalizar, etc.). |
+| 404 Not Found | El id o el endpoint no existe. |
+| 405 Method Not Allowed | Método HTTP no soportado en esa URL. |
+| 409 Conflict | Dato repetido: placa, identificación, licencia o ruta ya registradas, tarifas o turnos que se cruzan. |
+| 500 Internal Server Error | Error no previsto (se registra en el log). |
+
+### Endpoints
+
+| Recurso | Endpoints |
+|---|---|
+| Vehículos | `GET/POST /api/vehiculos` (`?estadoOperativo=`), `GET/PUT/DELETE /api/vehiculos/{id}`, `PATCH /api/vehiculos/{id}/estado` |
+| Rutas | `GET/POST /api/rutas` (`?origen=`), `GET/PUT/DELETE /api/rutas/{id}` |
+| Pasajeros | `GET/POST /api/pasajeros`, `GET/PUT /api/pasajeros/{id}`, `PATCH /api/pasajeros/{id}/estado` |
+| Conductores | `GET/POST /api/conductores` (`?estado=`), `GET/PUT /api/conductores/{id}`, `PATCH /api/conductores/{id}/estado` |
+| Tarifas | `GET/POST /api/tarifas`, `GET /api/tarifas/vigente`, `GET/PUT /api/tarifas/{id}`, `PATCH /api/tarifas/{id}/desactivar` |
+| Turnos | `GET/POST /api/turnos` (`?conductorId=`), `GET /api/turnos/{id}`, `PATCH /api/turnos/{id}/iniciar` y `/finalizar` |
+| Viajes | `GET/POST /api/viajes` (`?estado=`, `?pasajeroId=`), `GET /api/viajes/{id}`, `PATCH /api/viajes/{id}/asignar`, `/iniciar`, `/finalizar`, `/cancelar` |
+| Pagos | `GET /api/pagos`, `GET /api/pagos/{id}`, `PATCH /api/pagos/{id}/anular` |
 
 ---
 
 ## 4. Instalación, configuración y ejecución
 
-> El código aún no existe; esta guía se completará cuando se publique la primera versión ejecutable. Los pasos siguientes describen el flujo previsto.
+### 4.1 Requisitos
 
-### 4.1 Requisitos previos
+- **JDK 21 o superior** (el proyecto se probó con JDK 26).
+- **Node.js** para el frontend.
+- **MongoDB**: una base en **MongoDB Atlas** (recomendado) o un MongoDB local en el puerto 27017.
+  No hace falta para correr las pruebas.
 
-- **Git** para clonar el repositorio.
-- **JDK 26** (o la versión LTS que se confirme en el análisis).
-- **PostgreSQL 16** o superior.
-- **Node.js** (solo si el frontend usa herramientas de construcción).
-- Un navegador moderno (Chrome, Edge o Firefox).
+### 4.2 Configuración
 
-### 4.2 Obtener el código
-
-```bash
-git clone https://github.com/GUERRREROALEXANDER/flota-de-taxis-SmartFlet.git
-cd flota-de-taxis-SmartFlet
-```
-
-### 4.3 Configuración (previsto)
-
-1. Crear la base de datos:
-   ```sql
-   CREATE DATABASE smartflet;
+1. Copia el archivo de ejemplo en la raíz del proyecto:
+   ```powershell
+   Copy-Item .env.example .env
    ```
-2. Copiar el archivo de ejemplo de variables de entorno y completar los valores:
-   ```bash
-   cp .env.example .env
-   ```
-   Variables previstas:
+2. En `.env`, pon tu cadena de conexión en `MONGODB_URI` (Atlas → *Database → Connect → Drivers*).
+   Si no defines `MONGODB_URI`, el backend se conecta a `mongodb://localhost:27017/smartflet`.
+3. `.env` está en `.gitignore`: las credenciales nunca se suben al repositorio.
 
-   | Variable | Descripción | Ejemplo |
-   |---|---|---|
-   | `DB_URL` | Cadena de conexión a PostgreSQL | `jdbc:postgresql://localhost:5432/smartflet` |
-   | `DB_USER` | Usuario de la base de datos | `smartflet` |
-   | `DB_PASSWORD` | Contraseña de la base de datos | *(no versionar)* |
-   | `JWT_SECRET` | Clave para firmar los tokens de sesión | *(no versionar)* |
-   | `SERVER_PORT` | Puerto del servidor HTTP | `8080` |
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `MONGODB_URI` | Conexión a MongoDB | `mongodb+srv://<usuario>:<clave>@<cluster>.mongodb.net/smartflet` |
+| `SERVER_PORT` | Puerto HTTP del backend | `8080` |
 
-3. Aplicar las migraciones de base de datos (se definirá la herramienta en el análisis técnico).
+### 4.3 Ejecución
 
-### 4.4 Ejecución (previsto)
+```powershell
+# Backend (lee ../.env automáticamente)
+cd backend
+./mvnw spring-boot:run
 
-```bash
-# Backend
-./mvnw spring-boot:run        # o el comando equivalente del build elegido
-
-# Pruebas
+# Pruebas (usan un MongoDB embebido; la primera vez descargan mongod, ~600 MB)
 ./mvnw test
-```
 
-La aplicación quedará disponible en `http://localhost:8080`.
+# Frontend, en otra terminal
+cd frontend
+npm install   # solo la primera vez
+npm run dev   # http://localhost:5173
+```
 
 ---
 
-## 5. Estructura de directorios y componentes principales
-
-> **(propuesta)** Estructura inicial; puede ajustarse durante el desarrollo.
+## 5. Estructura de directorios
 
 ```
 flota-de-taxis-SmartFlet/
 ├── README.md
-├── .env.example               # Variables de entorno de ejemplo (sin secretos)
-├── docs/
-│   ├── historias-de-usuario.md
-│   ├── requerimientos-funcionales.md
-│   └── diagramas/             # Diagramas de arquitectura y de secuencia
+├── .env.example                 # Variables de entorno de ejemplo (sin secretos)
 ├── backend/
-│   ├── src/main/java/smartflet/
-│   │   ├── api/               # Controladores REST y DTOs
-│   │   ├── dominio/           # Entidades y reglas de negocio (vehículo, viaje, conductor)
-│   │   ├── servicio/          # Casos de uso: asignación, seguimiento, reportes
-│   │   ├── persistencia/      # Repositorios y acceso a PostgreSQL
-│   │   ├── ubicacion/         # Recepción y difusión de posiciones en tiempo real
-│   │   └── seguridad/         # Autenticación, roles y tokens
-│   ├── src/main/resources/
-│   │   └── db/migracion/      # Scripts de migración
-│   └── src/test/java/         # Pruebas unitarias y de integración
-└── frontend/
-    ├── central/               # Panel del operador de central
-    ├── conductor/             # Vista del conductor
-    └── pasajero/              # Vista para solicitar taxi
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/smartflet/
+│       │   ├── controlador/     # Controladores REST
+│       │   ├── servicio/        # Reglas de negocio
+│       │   ├── repositorio/     # Interfaces MongoRepository
+│       │   ├── modelo/          # Documentos MongoDB y enumeraciones
+│       │   ├── dto/             # Records de entrada (Solicitud) y salida (Respuesta)
+│       │   └── excepcion/       # Excepciones de negocio y manejador global
+│       ├── main/resources/application.yml
+│       └── test/                # Pruebas de integración (MongoDB embebido)
+├── frontend/                    # Interfaz web (Vite + JS); ver frontend/README.md
+└── docs/diagramas/              # Diagramas UML (Visual Paradigm)
 ```
 
-### Componentes principales
-
-| Componente | Responsabilidad |
-|---|---|
-| **Gestión de flota** | Alta, edición y baja de vehículos; estado operativo y documentación. |
-| **Gestión de conductores** | Registro de conductores, turnos y disponibilidad. |
-| **Despacho de viajes** | Recibe solicitudes, busca el taxi disponible más cercano y gestiona la asignación. |
-| **Ubicación en tiempo real** | Recibe las posiciones de los taxis y las muestra en el mapa de la central. |
-| **Tarifas y facturación** | Cálculo del precio del viaje según distancia, tiempo y tarifa vigente. |
-| **Reportes** | Indicadores de viajes, kilometraje, ingresos y mantenimiento. |
-| **Seguridad** | Autenticación, control de acceso por rol y auditoría de acciones. |
+Pendiente: autenticación y roles, ubicación en tiempo real, mantenimiento, reportes y la interfaz web de los módulos de despacho (hoy se usan por la API).
 
 ---
 
@@ -369,25 +365,21 @@ Prioridad según la escala **MoSCoW**: **Alta** (imprescindible para el MVP), **
 
 ## 8. Diagramas UML
 
-Modelados en Visual Paradigm 18.1. Cada diagrama tiene su carpeta en [`docs/diagramas/`](docs/diagramas/) con el `.puml`, el `.png`, el `.vpp` y un README con las decisiones de diseño. El proyecto completo con los tres diagramas es [`smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp).
+Se modelan en Visual Paradigm, en [`docs/diagramas/smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp), a partir del código actual. La entrega tiene 7 diagramas (las instrucciones están en [`docs/diagramas/PROMPTS-visual-paradigm.md`](docs/diagramas/PROMPTS-visual-paradigm.md)):
 
-| # | Diagrama | PNG | VPP |
-|---|---|---|---|
-| 01 | Clases de dominio | [smartflet-clases-dominio-vp.png](docs/diagramas/01-clases-dominio/smartflet-clases-dominio-vp.png) | [smartflet-clases-dominio.vpp](docs/diagramas/01-clases-dominio/smartflet-clases-dominio.vpp) |
-| 02 | Componentes | [smartflet-componentes.png](docs/diagramas/02-componentes/smartflet-componentes.png) | [smartflet-componentes.vpp](docs/diagramas/02-componentes/smartflet-componentes.vpp) |
-| 03 | Modelo conceptual y de dominio | [smartflet-modelo-conceptual.png](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.png) | [smartflet-modelo-conceptual.vpp](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.vpp) |
+| # | Diagrama |
+|---|---|
+| 01 | Clases (vista de dominio y vista por capas) |
+| 02 | Componentes |
+| 03 | Casos de uso |
+| 04 | Secuencia: finalizar viaje y registrar pago |
+| 05 | Actividades: asignar vehículo a un viaje |
+| 06 | Máquina de estados del viaje |
+| 07 | Despliegue |
 
-### 01 — Clases de dominio
-![Clases de dominio](docs/diagramas/01-clases-dominio/smartflet-clases-dominio-vp.png)
-
-### 02 — Componentes
-![Componentes](docs/diagramas/02-componentes/smartflet-componentes.png)
-
-### 03 — Modelo conceptual y de dominio
-![Modelo conceptual](docs/diagramas/03-modelo-conceptual/smartflet-modelo-conceptual.png)
+Los diagramas anteriores (clases de dominio, componentes y modelo conceptual) siguen en `docs/diagramas/` como versión previa hasta que se reemplacen.
 
 ---
-
 ## Licencia
 
 Por definir.

@@ -2,23 +2,21 @@ spring:
   application:
     name: smartflet-backend
 
-  # Base de datos H2 en memoria: se crea al arrancar y se borra al detener la app.
-  datasource:
-    url: jdbc:h2:mem:smartflet
-    username: sa
-    password:
+  # Lee el archivo .env de la raiz del proyecto (si existe) como si fueran propiedades.
+  # Asi MONGODB_URI no se escribe nunca en el repositorio. Funciona al arrancar desde
+  # backend/ (../.env) o desde la raiz (.env).
+  config:
+    import:
+      - optional:file:../.env[.properties]
+      - optional:file:.env[.properties]
 
-  jpa:
-    hibernate:
-      # Hibernate crea y actualiza las tablas a partir de las entidades.
-      ddl-auto: update
-    open-in-view: false
-
-  # Consola web para ver las tablas: http://localhost:8080/h2-console
-  # (JDBC URL: jdbc:h2:mem:smartflet, usuario: sa, sin contrasena)
-  h2:
-    console:
-      enabled: true
+  data:
+    mongodb:
+      # Atlas: mongodb+srv://usuario:clave@cluster.xxxxx.mongodb.net/smartflet
+      # Sin variable: MongoDB local en el puerto 27017.
+      uri: ${MONGODB_URI:mongodb://localhost:27017/smartflet}
+      # Crea los indices unicos declarados con @Indexed (placa, identificacion, licencia).
+      auto-index-creation: true
 
 server:
   port: ${SERVER_PORT:8080}

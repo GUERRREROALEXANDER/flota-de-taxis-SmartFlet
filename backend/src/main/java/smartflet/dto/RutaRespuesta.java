@@ -6,7 +6,7 @@ import smartflet.modelo.Ruta;
  * Datos de una ruta que se devuelven al cliente.
  */
 public record RutaRespuesta(
-        Long id,
+        String id,
         String origen,
         String destino,
         Double distanciaKm,

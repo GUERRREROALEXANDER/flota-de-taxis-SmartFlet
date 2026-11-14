@@ -2,43 +2,32 @@ package smartflet.modelo;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Persona habilitada (licencia vigente) para operar un vehiculo de la flota durante sus turnos.
  */
-@Entity
-@Table(name = "conductor")
+@Document(collection = "conductores")
 public class Conductor {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Indexed(unique = true)
     private String identificacion;
 
-    @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(name = "numero_licencia", nullable = false, unique = true, length = 30)
+    @Indexed(unique = true)
     private String numeroLicencia;
 
-    @Column(name = "fecha_vencimiento_licencia", nullable = false)
     private LocalDate fechaVencimientoLicencia;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "estado_conductor", nullable = false, length = 10)
     private EstadoRegistro estadoConductor;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Conductor() {
     }
 
@@ -60,7 +49,7 @@ public class Conductor {
         return estadoConductor == EstadoRegistro.ACTIVO;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

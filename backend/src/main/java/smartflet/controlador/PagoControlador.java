@@ -31,12 +31,12 @@ public class PagoControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PagoRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<PagoRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(pagoServicio.buscarPorId(id));
     }
 
     @PatchMapping("/{id}/anular")
-    public ResponseEntity<PagoRespuesta> anular(@PathVariable Long id) {
+    public ResponseEntity<PagoRespuesta> anular(@PathVariable String id) {
         return ResponseEntity.ok(pagoServicio.anular(id));
     }
 }

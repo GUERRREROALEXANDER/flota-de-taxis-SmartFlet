@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.VehiculoRespuesta;
 import smartflet.dto.VehiculoSolicitud;
+import smartflet.excepcion.RecursoDuplicadoException;
 import smartflet.excepcion.RecursoNoEncontradoException;
 import smartflet.excepcion.ReglaNegocioException;
 import smartflet.modelo.EstadoViaje;
@@ -35,30 +35,26 @@ public class VehiculoServicio {
         this.viajeRepositorio = viajeRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<VehiculoRespuesta> listarTodos() {
         return vehiculoRepositorio.findAll().stream()
                 .map(VehiculoRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<VehiculoRespuesta> listarPorEstado(Boolean estadoOperativo) {
         return vehiculoRepositorio.findByEstadoOperativo(estadoOperativo).stream()
                 .map(VehiculoRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public VehiculoRespuesta buscarPorId(Long id) {
+    public VehiculoRespuesta buscarPorId(String id) {
         return VehiculoRespuesta.desde(obtenerVehiculo(id));
     }
 
-    @Transactional
     public VehiculoRespuesta crear(VehiculoSolicitud solicitud) {
         String placa = normalizarPlaca(solicitud.placa());
         if (vehiculoRepositorio.existsByPlaca(placa)) {
-            throw new ReglaNegocioException("Ya existe un vehiculo con la placa " + placa);
+            throw new RecursoDuplicadoException("Ya existe un vehiculo con la placa " + placa);
         }
 
         Vehiculo vehiculo = new Vehiculo(
@@ -71,13 +67,12 @@ public class VehiculoServicio {
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    @Transactional
-    public VehiculoRespuesta actualizar(Long id, VehiculoSolicitud solicitud) {
+    public VehiculoRespuesta actualizar(String id, VehiculoSolicitud solicitud) {
         Vehiculo vehiculo = obtenerVehiculo(id);
 
         String placa = normalizarPlaca(solicitud.placa());
         if (vehiculoRepositorio.existsByPlacaAndIdNot(placa, id)) {
-            throw new ReglaNegocioException("Ya existe otro vehiculo con la placa " + placa);
+            throw new RecursoDuplicadoException("Ya existe otro vehiculo con la placa " + placa);
         }
 
         vehiculo.setPlaca(placa);
@@ -90,16 +85,14 @@ public class VehiculoServicio {
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    @Transactional
-    public VehiculoRespuesta cambiarEstado(Long id, Boolean estadoOperativo) {
+    public VehiculoRespuesta cambiarEstado(String id, Boolean estadoOperativo) {
         Vehiculo vehiculo = obtenerVehiculo(id);
         validarPuedeSalirDeServicio(vehiculo, estadoOperativo);
         vehiculo.setEstadoOperativo(estadoOperativo);
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    @Transactional
-    public void eliminar(Long id) {
+    public void eliminar(String id) {
         Vehiculo vehiculo = obtenerVehiculo(id);
         if (turnoRepositorio.existsByVehiculoId(id) || viajeRepositorio.existsByVehiculoId(id)) {
             throw new ReglaNegocioException("El vehiculo " + vehiculo.getPlaca()
@@ -117,7 +110,7 @@ public class VehiculoServicio {
         }
     }
 
-    private Vehiculo obtenerVehiculo(Long id) {
+    private Vehiculo obtenerVehiculo(String id) {
         return vehiculoRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Vehiculo", id));
     }

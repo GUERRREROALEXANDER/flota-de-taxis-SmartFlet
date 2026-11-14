@@ -6,7 +6,7 @@ import smartflet.modelo.Vehiculo;
  * Datos de un vehiculo que se devuelven al cliente.
  */
 public record VehiculoRespuesta(
-        Long id,
+        String id,
         String placa,
         String modelo,
         Integer capacidad,

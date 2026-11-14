@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.TarifaRespuesta;
 import smartflet.dto.TarifaSolicitud;
+import smartflet.excepcion.RecursoDuplicadoException;
 import smartflet.excepcion.RecursoNoEncontradoException;
 import smartflet.excepcion.ReglaNegocioException;
 import smartflet.modelo.EstadoRegistro;
@@ -22,7 +22,8 @@ public class TarifaServicio {
 
     /** Se usa como "sin fecha de fin" al comparar vigencias. */
     private static final LocalDate SIN_FIN = LocalDate.of(9999, 12, 31);
-    private static final Long NINGUNA = -1L;
+    /** Al crear no hay tarifa que excluir de la comparacion. */
+    private static final String NINGUNA = "";
 
     private final TarifaRepositorio tarifaRepositorio;
 
@@ -30,19 +31,16 @@ public class TarifaServicio {
         this.tarifaRepositorio = tarifaRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<TarifaRespuesta> listarTodas() {
         return tarifaRepositorio.findAll().stream()
                 .map(TarifaRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public TarifaRespuesta buscarPorId(Long id) {
+    public TarifaRespuesta buscarPorId(String id) {
         return TarifaRespuesta.desde(obtenerTarifa(id));
     }
 
-    @Transactional(readOnly = true)
     public TarifaRespuesta buscarVigente() {
         return tarifaRepositorio.buscarVigentes(EstadoRegistro.ACTIVO, LocalDate.now()).stream()
                 .findFirst()
@@ -50,7 +48,6 @@ public class TarifaServicio {
                 .orElseThrow(() -> new RecursoNoEncontradoException("No hay una tarifa vigente hoy"));
     }
 
-    @Transactional
     public TarifaRespuesta crear(TarifaSolicitud solicitud) {
         validarVigencia(solicitud, NINGUNA);
         Tarifa tarifa = new Tarifa(solicitud.nombre().trim(), solicitud.valorBase(), solicitud.valorPorKm(),
@@ -59,8 +56,7 @@ public class TarifaServicio {
     }
 
     /** Los viajes ya cobrados no cambian: el monto quedo guardado en su Pago. */
-    @Transactional
-    public TarifaRespuesta modificar(Long id, TarifaSolicitud solicitud) {
+    public TarifaRespuesta modificar(String id, TarifaSolicitud solicitud) {
         Tarifa tarifa = obtenerTarifa(id);
         if (tarifa.getEstado() == EstadoRegistro.INACTIVO) {
             throw new ReglaNegocioException("No se puede modificar una tarifa desactivada");
@@ -74,26 +70,25 @@ public class TarifaServicio {
         return TarifaRespuesta.desde(tarifaRepositorio.save(tarifa));
     }
 
-    @Transactional
-    public TarifaRespuesta desactivar(Long id) {
+    public TarifaRespuesta desactivar(String id) {
         Tarifa tarifa = obtenerTarifa(id);
         tarifa.desactivarTarifa();
         return TarifaRespuesta.desde(tarifaRepositorio.save(tarifa));
     }
 
-    private Tarifa obtenerTarifa(Long id) {
+    private Tarifa obtenerTarifa(String id) {
         return tarifaRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tarifa", id));
     }
 
-    private void validarVigencia(TarifaSolicitud solicitud, Long idExcluido) {
+    private void validarVigencia(TarifaSolicitud solicitud, String idExcluido) {
         LocalDate inicio = solicitud.fechaInicioVigencia();
         LocalDate fin = solicitud.fechaFinVigencia() == null ? SIN_FIN : solicitud.fechaFinVigencia();
         if (fin.isBefore(inicio)) {
             throw new ReglaNegocioException("La fecha de fin de vigencia no puede ser anterior a la de inicio");
         }
         if (tarifaRepositorio.existeSolapamiento(EstadoRegistro.ACTIVO, inicio, fin, idExcluido)) {
-            throw new ReglaNegocioException("Ya existe una tarifa activa con una vigencia que se cruza con esas fechas");
+            throw new RecursoDuplicadoException("Ya existe una tarifa activa con una vigencia que se cruza con esas fechas");
         }
     }
 }

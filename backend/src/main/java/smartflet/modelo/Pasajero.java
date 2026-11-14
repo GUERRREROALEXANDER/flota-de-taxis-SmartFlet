@@ -2,46 +2,33 @@ package smartflet.modelo;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Persona que solicita viajes y los paga. Se desactiva en vez de borrarse para conservar su historial.
  */
-@Entity
-@Table(name = "pasajero")
+@Document(collection = "pasajeros")
 public class Pasajero {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Indexed(unique = true)
     private String identificacion;
 
-    @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(nullable = false, length = 20)
     private String telefono;
 
-    @Column(name = "correo_electronico", nullable = false, length = 120)
     private String correoElectronico;
 
-    @Column(name = "fecha_registro", nullable = false)
     private LocalDate fechaRegistro;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "estado_cuenta", nullable = false, length = 10)
     private EstadoRegistro estadoCuenta;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Pasajero() {
     }
 
@@ -59,7 +46,7 @@ public class Pasajero {
         return estadoCuenta == EstadoRegistro.ACTIVO;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

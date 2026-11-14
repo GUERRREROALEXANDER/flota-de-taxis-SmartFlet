@@ -3,42 +3,38 @@ package smartflet.repositorio;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import smartflet.modelo.EstadoTurno;
 import smartflet.modelo.Turno;
 
 @Repository
-public interface TurnoRepositorio extends JpaRepository<Turno, Long> {
+public interface TurnoRepositorio extends MongoRepository<Turno, String> {
 
-    List<Turno> findByConductorIdOrderByFechaInicioDesc(Long conductorId);
+    List<Turno> findByConductorIdOrderByFechaInicioDesc(String conductorId);
 
-    boolean existsByVehiculoIdAndEstado(Long vehiculoId, EstadoTurno estado);
+    boolean existsByVehiculoIdAndEstado(String vehiculoId, EstadoTurno estado);
 
-    boolean existsByVehiculoId(Long vehiculoId);
+    boolean existsByVehiculoId(String vehiculoId);
+
+    /** Consulta derivada: otro turno del conductor, no finalizado, con inicio < fin y fin > inicio. */
+    boolean existsByConductorIdAndEstadoNotAndFechaInicioLessThanAndFechaFinGreaterThan(
+            String conductorId, EstadoTurno estado, LocalDateTime fin, LocalDateTime inicio);
+
+    /** Consulta derivada: otro turno del vehiculo, no finalizado, con inicio < fin y fin > inicio. */
+    boolean existsByVehiculoIdAndEstadoNotAndFechaInicioLessThanAndFechaFinGreaterThan(
+            String vehiculoId, EstadoTurno estado, LocalDateTime fin, LocalDateTime inicio);
 
     /** True si el conductor tiene otro turno no finalizado que se cruza con [inicio, fin). */
-    @Query("""
-            select count(t) > 0 from Turno t
-            where t.conductor.id = :conductorId
-              and t.estado <> :finalizado
-              and t.fechaInicio < :fin and t.fechaFin > :inicio
-            """)
-    boolean conductorTieneTurnoSolapado(@Param("conductorId") Long conductorId,
-                                        @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,
-                                        @Param("finalizado") EstadoTurno finalizado);
+    default boolean conductorTieneTurnoSolapado(String conductorId, LocalDateTime inicio, LocalDateTime fin) {
+        return existsByConductorIdAndEstadoNotAndFechaInicioLessThanAndFechaFinGreaterThan(
+                conductorId, EstadoTurno.FINALIZADO, fin, inicio);
+    }
 
     /** True si el vehiculo tiene otro turno no finalizado que se cruza con [inicio, fin). */
-    @Query("""
-            select count(t) > 0 from Turno t
-            where t.vehiculo.id = :vehiculoId
-              and t.estado <> :finalizado
-              and t.fechaInicio < :fin and t.fechaFin > :inicio
-            """)
-    boolean vehiculoTieneTurnoSolapado(@Param("vehiculoId") Long vehiculoId,
-                                       @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,
-                                       @Param("finalizado") EstadoTurno finalizado);
+    default boolean vehiculoTieneTurnoSolapado(String vehiculoId, LocalDateTime inicio, LocalDateTime fin) {
+        return existsByVehiculoIdAndEstadoNotAndFechaInicioLessThanAndFechaFinGreaterThan(
+                vehiculoId, EstadoTurno.FINALIZADO, fin, inicio);
+    }
 }

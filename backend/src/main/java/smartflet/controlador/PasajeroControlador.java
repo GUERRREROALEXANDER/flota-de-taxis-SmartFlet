@@ -39,7 +39,7 @@ public class PasajeroControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PasajeroRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<PasajeroRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(pasajeroServicio.buscarPorId(id));
     }
 
@@ -50,13 +50,13 @@ public class PasajeroControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PasajeroRespuesta> modificarDatos(@PathVariable Long id,
+    public ResponseEntity<PasajeroRespuesta> modificarDatos(@PathVariable String id,
                                                             @Valid @RequestBody PasajeroSolicitud solicitud) {
         return ResponseEntity.ok(pasajeroServicio.modificarDatos(id, solicitud));
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<PasajeroRespuesta> cambiarEstado(@PathVariable Long id,
+    public ResponseEntity<PasajeroRespuesta> cambiarEstado(@PathVariable String id,
                                                            @Valid @RequestBody EstadoRegistroSolicitud solicitud) {
         return ResponseEntity.ok(pasajeroServicio.cambiarEstado(id, solicitud.estado()));
     }

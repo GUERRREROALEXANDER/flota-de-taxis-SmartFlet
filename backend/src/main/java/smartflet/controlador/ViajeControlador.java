@@ -37,7 +37,7 @@ public class ViajeControlador {
     /** GET /api/viajes, ?estado=SOLICITADO o ?pasajeroId=1 (historial del pasajero). */
     @GetMapping
     public ResponseEntity<List<ViajeRespuesta>> listar(@RequestParam(required = false) EstadoViaje estado,
-                                                       @RequestParam(required = false) Long pasajeroId) {
+                                                       @RequestParam(required = false) String pasajeroId) {
         if (pasajeroId != null) {
             return ResponseEntity.ok(viajeServicio.listarPorPasajero(pasajeroId));
         }
@@ -47,7 +47,7 @@ public class ViajeControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ViajeRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ViajeRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(viajeServicio.buscarPorId(id));
     }
 
@@ -58,24 +58,24 @@ public class ViajeControlador {
     }
 
     @PatchMapping("/{id}/asignar")
-    public ResponseEntity<ViajeRespuesta> asignarVehiculo(@PathVariable Long id,
+    public ResponseEntity<ViajeRespuesta> asignarVehiculo(@PathVariable String id,
                                                           @Valid @RequestBody AsignacionVehiculoSolicitud solicitud) {
         return ResponseEntity.ok(viajeServicio.asignarVehiculo(id, solicitud.vehiculoId()));
     }
 
     @PatchMapping("/{id}/iniciar")
-    public ResponseEntity<ViajeRespuesta> iniciar(@PathVariable Long id) {
+    public ResponseEntity<ViajeRespuesta> iniciar(@PathVariable String id) {
         return ResponseEntity.ok(viajeServicio.iniciar(id));
     }
 
     @PatchMapping("/{id}/finalizar")
-    public ResponseEntity<ViajeRespuesta> finalizar(@PathVariable Long id,
+    public ResponseEntity<ViajeRespuesta> finalizar(@PathVariable String id,
                                                     @Valid @RequestBody FinalizacionViajeSolicitud solicitud) {
         return ResponseEntity.ok(viajeServicio.finalizar(id, solicitud));
     }
 
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<ViajeRespuesta> cancelar(@PathVariable Long id) {
+    public ResponseEntity<ViajeRespuesta> cancelar(@PathVariable String id) {
         return ResponseEntity.ok(viajeServicio.cancelar(id));
     }
 }

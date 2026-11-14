@@ -3,14 +3,13 @@ package smartflet.servicio;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.TurnoRespuesta;
 import smartflet.dto.TurnoSolicitud;
+import smartflet.excepcion.RecursoDuplicadoException;
 import smartflet.excepcion.RecursoNoEncontradoException;
 import smartflet.excepcion.ReglaNegocioException;
 import smartflet.modelo.Conductor;
-import smartflet.modelo.EstadoTurno;
 import smartflet.modelo.Turno;
 import smartflet.modelo.Vehiculo;
 import smartflet.repositorio.ConductorRepositorio;
@@ -34,7 +33,6 @@ public class TurnoServicio {
         this.vehiculoRepositorio = vehiculoRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<TurnoRespuesta> listarTodos() {
         return turnoRepositorio.findAll().stream()
                 .map(TurnoRespuesta::desde)
@@ -42,19 +40,16 @@ public class TurnoServicio {
     }
 
     /** consultarTurnos() del conductor. */
-    @Transactional(readOnly = true)
-    public List<TurnoRespuesta> listarPorConductor(Long conductorId) {
+    public List<TurnoRespuesta> listarPorConductor(String conductorId) {
         return turnoRepositorio.findByConductorIdOrderByFechaInicioDesc(conductorId).stream()
                 .map(TurnoRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public TurnoRespuesta buscarPorId(Long id) {
+    public TurnoRespuesta buscarPorId(String id) {
         return TurnoRespuesta.desde(obtenerTurno(id));
     }
 
-    @Transactional
     public TurnoRespuesta programar(TurnoSolicitud solicitud) {
         if (!solicitud.fechaFin().isAfter(solicitud.fechaInicio())) {
             throw new ReglaNegocioException("La fecha de fin del turno debe ser posterior a la de inicio");
@@ -74,36 +69,36 @@ public class TurnoServicio {
             throw new ReglaNegocioException("El vehiculo " + vehiculo.getPlaca() + " esta fuera de servicio");
         }
         if (turnoRepositorio.conductorTieneTurnoSolapado(conductor.getId(), solicitud.fechaInicio(),
-                solicitud.fechaFin(), EstadoTurno.FINALIZADO)) {
-            throw new ReglaNegocioException("El conductor ya tiene un turno que se cruza con ese horario");
+                solicitud.fechaFin())) {
+            throw new RecursoDuplicadoException("El conductor ya tiene un turno que se cruza con ese horario");
         }
         if (turnoRepositorio.vehiculoTieneTurnoSolapado(vehiculo.getId(), solicitud.fechaInicio(),
-                solicitud.fechaFin(), EstadoTurno.FINALIZADO)) {
-            throw new ReglaNegocioException("El vehiculo ya tiene un turno que se cruza con ese horario");
+                solicitud.fechaFin())) {
+            throw new RecursoDuplicadoException("El vehiculo ya tiene un turno que se cruza con ese horario");
         }
 
-        Turno turno = new Turno(conductor, vehiculo, solicitud.fechaInicio(), solicitud.fechaFin());
+        Turno turno = new Turno(conductor.getId(), vehiculo.getId(), solicitud.fechaInicio(), solicitud.fechaFin());
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    @Transactional
-    public TurnoRespuesta iniciar(Long id) {
+    public TurnoRespuesta iniciar(String id) {
         Turno turno = obtenerTurno(id);
-        if (!turno.getConductor().estaActivo()) {
+        Conductor conductor = conductorRepositorio.findById(turno.getConductorId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Conductor", turno.getConductorId()));
+        if (!conductor.estaActivo()) {
             throw new ReglaNegocioException("El conductor del turno esta inactivo");
         }
         turno.iniciarTurno();
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    @Transactional
-    public TurnoRespuesta finalizar(Long id) {
+    public TurnoRespuesta finalizar(String id) {
         Turno turno = obtenerTurno(id);
         turno.finalizarTurno();
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    private Turno obtenerTurno(Long id) {
+    private Turno obtenerTurno(String id) {
         return turnoRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Turno", id));
     }

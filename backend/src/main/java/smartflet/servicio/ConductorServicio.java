@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import smartflet.dto.ConductorRespuesta;
 import smartflet.dto.ConductorSolicitud;
+import smartflet.excepcion.RecursoDuplicadoException;
 import smartflet.excepcion.RecursoNoEncontradoException;
 import smartflet.excepcion.ReglaNegocioException;
 import smartflet.modelo.Conductor;
@@ -26,36 +26,32 @@ public class ConductorServicio {
         this.conductorRepositorio = conductorRepositorio;
     }
 
-    @Transactional(readOnly = true)
     public List<ConductorRespuesta> listarTodos() {
         return conductorRepositorio.findAll().stream()
                 .map(ConductorRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<ConductorRespuesta> listarPorEstado(EstadoRegistro estado) {
         return conductorRepositorio.findByEstadoConductor(estado).stream()
                 .map(ConductorRespuesta::desde)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public ConductorRespuesta buscarPorId(Long id) {
+    public ConductorRespuesta buscarPorId(String id) {
         return ConductorRespuesta.desde(obtenerConductor(id));
     }
 
-    @Transactional
     public ConductorRespuesta registrar(ConductorSolicitud solicitud) {
         String identificacion = solicitud.identificacion().trim();
         String licencia = normalizarLicencia(solicitud.numeroLicencia());
 
         validarLicenciaVigente(solicitud.fechaVencimientoLicencia());
         if (conductorRepositorio.existsByIdentificacion(identificacion)) {
-            throw new ReglaNegocioException("Ya existe un conductor con la identificacion " + identificacion);
+            throw new RecursoDuplicadoException("Ya existe un conductor con la identificacion " + identificacion);
         }
         if (conductorRepositorio.existsByNumeroLicencia(licencia)) {
-            throw new ReglaNegocioException("Ya existe un conductor con la licencia " + licencia);
+            throw new RecursoDuplicadoException("Ya existe un conductor con la licencia " + licencia);
         }
 
         Conductor conductor = new Conductor(identificacion, solicitud.nombre().trim(), licencia,
@@ -63,18 +59,17 @@ public class ConductorServicio {
         return ConductorRespuesta.desde(conductorRepositorio.save(conductor));
     }
 
-    @Transactional
-    public ConductorRespuesta actualizar(Long id, ConductorSolicitud solicitud) {
+    public ConductorRespuesta actualizar(String id, ConductorSolicitud solicitud) {
         Conductor conductor = obtenerConductor(id);
         String identificacion = solicitud.identificacion().trim();
         String licencia = normalizarLicencia(solicitud.numeroLicencia());
 
         validarLicenciaVigente(solicitud.fechaVencimientoLicencia());
         if (conductorRepositorio.existsByIdentificacionAndIdNot(identificacion, id)) {
-            throw new ReglaNegocioException("Ya existe otro conductor con la identificacion " + identificacion);
+            throw new RecursoDuplicadoException("Ya existe otro conductor con la identificacion " + identificacion);
         }
         if (conductorRepositorio.existsByNumeroLicenciaAndIdNot(licencia, id)) {
-            throw new ReglaNegocioException("Ya existe otro conductor con la licencia " + licencia);
+            throw new RecursoDuplicadoException("Ya existe otro conductor con la licencia " + licencia);
         }
 
         conductor.setIdentificacion(identificacion);
@@ -85,14 +80,13 @@ public class ConductorServicio {
     }
 
     /** actualizarEstado() del diagrama de clases: activar o desactivar sin borrar el historial. */
-    @Transactional
-    public ConductorRespuesta cambiarEstado(Long id, EstadoRegistro estado) {
+    public ConductorRespuesta cambiarEstado(String id, EstadoRegistro estado) {
         Conductor conductor = obtenerConductor(id);
         conductor.setEstadoConductor(estado);
         return ConductorRespuesta.desde(conductorRepositorio.save(conductor));
     }
 
-    private Conductor obtenerConductor(Long id) {
+    private Conductor obtenerConductor(String id) {
         return conductorRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Conductor", id));
     }

@@ -42,7 +42,7 @@ public class RutaControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RutaRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<RutaRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(rutaServicio.buscarPorId(id));
     }
 
@@ -54,13 +54,13 @@ public class RutaControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RutaRespuesta> actualizar(@PathVariable Long id,
+    public ResponseEntity<RutaRespuesta> actualizar(@PathVariable String id,
                                                     @Valid @RequestBody RutaSolicitud solicitud) {
         return ResponseEntity.ok(rutaServicio.actualizar(id, solicitud));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         rutaServicio.eliminar(id);
         return ResponseEntity.noContent().build();
     }

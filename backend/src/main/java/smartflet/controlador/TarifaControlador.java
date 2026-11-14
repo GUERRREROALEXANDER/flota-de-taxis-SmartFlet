@@ -43,7 +43,7 @@ public class TarifaControlador {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TarifaRespuesta> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<TarifaRespuesta> buscarPorId(@PathVariable String id) {
         return ResponseEntity.ok(tarifaServicio.buscarPorId(id));
     }
 
@@ -54,13 +54,13 @@ public class TarifaControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TarifaRespuesta> modificar(@PathVariable Long id,
+    public ResponseEntity<TarifaRespuesta> modificar(@PathVariable String id,
                                                      @Valid @RequestBody TarifaSolicitud solicitud) {
         return ResponseEntity.ok(tarifaServicio.modificar(id, solicitud));
     }
 
     @PatchMapping("/{id}/desactivar")
-    public ResponseEntity<TarifaRespuesta> desactivar(@PathVariable Long id) {
+    public ResponseEntity<TarifaRespuesta> desactivar(@PathVariable String id) {
         return ResponseEntity.ok(tarifaServicio.desactivar(id));
     }
 }

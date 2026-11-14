@@ -2,56 +2,42 @@ package smartflet.modelo;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import smartflet.excepcion.ReglaNegocioException;
 
 /**
  * Periodo en el que un conductor opera un vehiculo. Su estado solo cambia con iniciarTurno() y finalizarTurno().
+ * Conductor y vehiculo se guardan como referencias por id (documentos independientes en MongoDB).
  */
-@Entity
-@Table(name = "turno")
+@Document(collection = "turnos")
 public class Turno {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "conductor_id", nullable = false)
-    private Conductor conductor;
+    @Indexed
+    private String conductorId;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehiculo_id", nullable = false)
-    private Vehiculo vehiculo;
+    @Indexed
+    private String vehiculoId;
 
-    @Column(name = "fecha_inicio", nullable = false)
     private LocalDateTime fechaInicio;
 
-    @Column(name = "fecha_fin", nullable = false)
     private LocalDateTime fechaFin;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 12)
     private EstadoTurno estado;
 
-    /** Constructor vacio que exige JPA. */
+    /** Constructor vacio que usa Spring Data para leer el documento. */
     protected Turno() {
     }
 
     /** Un turno nuevo queda PROGRAMADO. */
-    public Turno(Conductor conductor, Vehiculo vehiculo, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        this.conductor = conductor;
-        this.vehiculo = vehiculo;
+    public Turno(String conductorId, String vehiculoId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        this.conductorId = conductorId;
+        this.vehiculoId = vehiculoId;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
         this.estado = EstadoTurno.PROGRAMADO;
@@ -71,16 +57,16 @@ public class Turno {
         this.estado = EstadoTurno.FINALIZADO;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public Conductor getConductor() {
-        return conductor;
+    public String getConductorId() {
+        return conductorId;
     }
 
-    public Vehiculo getVehiculo() {
-        return vehiculo;
+    public String getVehiculoId() {
+        return vehiculoId;
     }
 
     public LocalDateTime getFechaInicio() {
