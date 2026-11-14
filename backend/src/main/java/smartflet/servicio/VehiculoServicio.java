@@ -1,6 +1,7 @@
 package smartflet.servicio;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,8 +10,11 @@ import smartflet.dto.VehiculoRespuesta;
 import smartflet.dto.VehiculoSolicitud;
 import smartflet.excepcion.RecursoNoEncontradoException;
 import smartflet.excepcion.ReglaNegocioException;
+import smartflet.modelo.EstadoViaje;
 import smartflet.modelo.Vehiculo;
+import smartflet.repositorio.TurnoRepositorio;
 import smartflet.repositorio.VehiculoRepositorio;
+import smartflet.repositorio.ViajeRepositorio;
 
 /**
  * Logica de negocio de los vehiculos de la flota.
@@ -18,10 +22,17 @@ import smartflet.repositorio.VehiculoRepositorio;
 @Service
 public class VehiculoServicio {
 
-    private final VehiculoRepositorio vehiculoRepositorio;
+    private static final Set<EstadoViaje> VIAJES_ACTIVOS = Set.of(EstadoViaje.ASIGNADO, EstadoViaje.EN_CURSO);
 
-    public VehiculoServicio(VehiculoRepositorio vehiculoRepositorio) {
+    private final VehiculoRepositorio vehiculoRepositorio;
+    private final TurnoRepositorio turnoRepositorio;
+    private final ViajeRepositorio viajeRepositorio;
+
+    public VehiculoServicio(VehiculoRepositorio vehiculoRepositorio, TurnoRepositorio turnoRepositorio,
+                            ViajeRepositorio viajeRepositorio) {
         this.vehiculoRepositorio = vehiculoRepositorio;
+        this.turnoRepositorio = turnoRepositorio;
+        this.viajeRepositorio = viajeRepositorio;
     }
 
     @Transactional(readOnly = true)
@@ -73,6 +84,7 @@ public class VehiculoServicio {
         vehiculo.setModelo(solicitud.modelo().trim());
         vehiculo.setCapacidad(solicitud.capacidad());
         vehiculo.setTipo(solicitud.tipo().trim());
+        validarPuedeSalirDeServicio(vehiculo, solicitud.estadoOperativo());
         vehiculo.setEstadoOperativo(solicitud.estadoOperativo());
 
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
@@ -81,6 +93,7 @@ public class VehiculoServicio {
     @Transactional
     public VehiculoRespuesta cambiarEstado(Long id, Boolean estadoOperativo) {
         Vehiculo vehiculo = obtenerVehiculo(id);
+        validarPuedeSalirDeServicio(vehiculo, estadoOperativo);
         vehiculo.setEstadoOperativo(estadoOperativo);
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
@@ -88,7 +101,20 @@ public class VehiculoServicio {
     @Transactional
     public void eliminar(Long id) {
         Vehiculo vehiculo = obtenerVehiculo(id);
+        if (turnoRepositorio.existsByVehiculoId(id) || viajeRepositorio.existsByVehiculoId(id)) {
+            throw new ReglaNegocioException("El vehiculo " + vehiculo.getPlaca()
+                    + " tiene turnos o viajes registrados: sacalo de servicio en vez de eliminarlo");
+        }
         vehiculoRepositorio.delete(vehiculo);
+    }
+
+    /** Un vehiculo que atiende un viaje (asignado o en curso) no puede salir de servicio. */
+    private void validarPuedeSalirDeServicio(Vehiculo vehiculo, Boolean nuevoEstado) {
+        if (Boolean.FALSE.equals(nuevoEstado)
+                && viajeRepositorio.existsByVehiculoIdAndEstadoViajeIn(vehiculo.getId(), VIAJES_ACTIVOS)) {
+            throw new ReglaNegocioException("El vehiculo " + vehiculo.getPlaca()
+                    + " esta atendiendo un viaje: no puede salir de servicio");
+        }
     }
 
     private Vehiculo obtenerVehiculo(Long id) {
