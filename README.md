@@ -377,7 +377,7 @@ Se modelan en Visual Paradigm, en [`docs/diagramas/smartflet-diagramas.vpp`](doc
 | 06 | Máquina de estados del viaje |
 | 07 | Despliegue |
 
-Los diagramas anteriores (clases de dominio, componentes y modelo conceptual) siguen en `docs/diagramas/` como versión previa hasta que se reemplacen.
+Los PNG exportados y la vista previa de cada uno están en [`docs/diagramas/README.md`](docs/diagramas/README.md).
 
 ---
 ## Licencia
