@@ -15,7 +15,7 @@ Todos los diagramas están en un solo proyecto de Visual Paradigm 18.1: [`smartf
 
 ## Notación usada
 
-- **Clases:** `◆` composición (Viaje–Pago, Viaje–Tarifa como copia embebida); dependencia «referencia por id» cuando un documento guarda solo el id de otro; `«throw»` hacia `ReglaNegocioException`.
+- **Clases:** `◆` composición solo en Viaje–Pago; asociación dirigida «copia embebida» de Viaje a Tarifa (Tarifa también es un documento propio); dependencia «referencia por id» cuando un documento guarda solo el id de otro; `«throw»` hacia `ReglaNegocioException`.
 - **Capas:** flecha sólida = delega (campo `private final` inyectado por constructor); herencia de cada repositorio hacia `MongoRepository<T, ID>`.
 - **Componentes:** bola = interfaz provista (Realization), flecha «use» = interfaz requerida, puertos en el borde de cada módulo.
 - **Despliegue:** `«device»`, `«executionEnvironment»`, `«artifact»`, rutas de comunicación con protocolo y `«manifest»` hacia los subsistemas del 02.
