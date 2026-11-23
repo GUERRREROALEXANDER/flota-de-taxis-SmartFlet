@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="SmartFlet: gestion de la flota de taxis, viajes, turnos, tarifas y pagos.">
+    <meta name="color-scheme" content="dark light">
+    <title>SmartFlet · Centro de operaciones</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap">
+</head>
+<body>
+<div id="aplicacion" class="disposicion">
+
+    <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+
+    <aside class="lateral" id="lateral">
+        <div class="lateral__cabecera">
+            <div class="lateral__marca">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <rect width="48" height="48" rx="12" fill="#F5B93B"/>
+                    <path d="M12 30h24v5a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-1H19v1a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2z" fill="#0B1120"/>
+                    <path d="M15 29l3-9a3 3 0 0 1 3-2h6a3 3 0 0 1 3 2l3 9z" fill="#0B1120"/>
+                    <circle cx="17" cy="33" r="1.6" fill="#F5B93B"/>
+                    <circle cx="31" cy="33" r="1.6" fill="#F5B93B"/>
+                </svg>
+                <div>
+                    <p class="lateral__nombre">SmartFlet</p>
+                    <p class="lateral__sub">Centro de operaciones</p>
+                </div>
+            </div>
+            <button class="boton-icono lateral__cerrar" id="cerrar-lateral" aria-label="Cerrar menu">
+                <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <nav class="lateral__navegacion" id="navegacion" aria-label="Navegacion principal"></nav>
+
+        <div class="lateral__pie">
+            <button class="menu__opcion" id="cambiar-tema">
+                <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <span id="etiqueta-tema">Tema claro</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="velo" id="velo" hidden></div>
+
+    <div class="principal">
+        <header class="barra-superior">
+            <button class="boton-icono barra-superior__menu" id="abrir-lateral" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <div class="barra-superior__titulos">
+                <h1 class="barra-superior__titulo" id="titulo-vista">Panel de control</h1>
+                <p class="barra-superior__descripcion" id="descripcion-vista"></p>
+            </div>
+            <div class="barra-superior__acciones" id="acciones-vista"></div>
+            <button class="boton-icono" id="boton-actualizar" aria-label="Actualizar datos" title="Actualizar (R)">
+                <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+            </button>
+        </header>
+
+        <main class="contenido" id="contenido" tabindex="-1"></main>
+    </div>
+</div>
+
+<div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" hidden></div>
+
+<noscript>
+    <div style="padding:2rem;font-family:system-ui;max-width:40rem;margin:0 auto">
+        <h1>Se requiere JavaScript</h1>
+        <p>SmartFlet necesita JavaScript para comunicarse con la API. Habilitelo y recargue la pagina.</p>
+    </div>
+</noscript>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

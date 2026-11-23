@@ -1,6 +1,6 @@
 # SmartFlet — Sistema de gestión de flota de taxis
 
-> **Estado:** En desarrollo. Backend Spring Boot con API REST sobre MongoDB (vehículos, rutas, pasajeros, conductores, turnos, tarifas, viajes y pagos) y frontend web para vehículos, rutas y el tablero de la flota.
+> **Estado:** En desarrollo. Backend Spring Boot con API REST sobre MongoDB (vehículos, rutas, pasajeros, conductores, turnos, tarifas, viajes y pagos) y frontend web (carpeta `frontend/`) con panel, viajes, turnos, vehículos, conductores, rutas, pasajeros, tarifas, pagos y reportes.
 > Lo que aún no está implementado se indica como **(pendiente)**.
 
 ---
@@ -69,7 +69,7 @@
 | Base de datos | MongoDB (Atlas o local) | Conexión por la variable de entorno `MONGODB_URI`. |
 | Pruebas | JUnit 5, MockMvc, MongoDB embebido (flapdoodle) | Las pruebas levantan su propio `mongod`; no tocan Atlas. |
 | Build | Maven Wrapper (`mvnw`) | No hace falta instalar Maven. |
-| Frontend | JavaScript puro + Vite, Three.js, GSAP | Proyecto aparte en `frontend/` (ver su README). |
+| Frontend | JavaScript puro (módulos ES) + Vite | Proyecto aparte en `frontend/` (ver su README). Sin frameworks. |
 
 ### Arquitectura
 
@@ -189,11 +189,18 @@ flota-de-taxis-SmartFlet/
 │       │   └── excepcion/       # Excepciones de negocio y manejador global
 │       ├── main/resources/application.yml
 │       └── test/                # Pruebas de integración (MongoDB embebido)
-├── frontend/                    # Interfaz web (Vite + JS); ver frontend/README.md
-└── docs/diagramas/              # Diagramas UML (Visual Paradigm)
+├── frontend/                    # Todo el frontend; ver frontend/README.md
+│   ├── index.html
+│   └── src/
+│       ├── api/                 # ClienteHttp y una llamada por endpoint del backend
+│       ├── app/                 # Navegación entre pantallas, tema y menú
+│       ├── componentes/         # Tablas, formularios, gráficas, avisos
+│       ├── vistas/              # Una pantalla por módulo (viajes.js, turnos.js...)
+│       └── estilos/             # app.css
+└── docs/diagramas/              # 5 vistas de arquitectura (Visual Paradigm)
 ```
 
-Pendiente: autenticación y roles, ubicación en tiempo real, mantenimiento, reportes y la interfaz web de los módulos de despacho (hoy se usan por la API).
+Pendiente: autenticación y roles, ubicación en tiempo real y mantenimiento de vehículos.
 
 ---
 
@@ -363,21 +370,19 @@ Prioridad según la escala **MoSCoW**: **Alta** (imprescindible para el MVP), **
 
 ---
 
-## 8. Diagramas UML
+## 8. Vistas de arquitectura
 
-Se modelan en Visual Paradigm, en [`docs/diagramas/smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp), a partir del código actual. La entrega tiene 7 diagramas (las instrucciones están en [`docs/diagramas/PROMPTS-visual-paradigm.md`](docs/diagramas/PROMPTS-visual-paradigm.md)):
+Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp), a partir del código actual:
 
-| # | Diagrama |
-|---|---|
-| 01 | Clases (vista de dominio y vista por capas) |
-| 02 | Componentes |
-| 03 | Casos de uso |
-| 04 | Secuencia: finalizar viaje y registrar pago |
-| 05 | Actividades: asignar vehículo a un viaje |
-| 06 | Máquina de estados del viaje |
-| 07 | Despliegue |
+| # | Vista | Diagrama | Responde |
+|---|---|---|---|
+| 1 | Contexto | Diagrama de contexto (DFD nivel 0) | ¿Con quién intercambia información SmartFlet? |
+| 2 | Funcional | Diagrama de componentes | ¿Qué módulos tiene y qué servicios se piden entre ellos? |
+| 3 | Lógica | Diagrama de clases con estereotipos GRASP | ¿Qué clases del dominio hay y qué responsabilidad tiene cada una? |
+| 4 | Desarrollo | Diagrama de clases por capas | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
+| 5 | Despliegue | Diagrama de despliegue | ¿Dónde corre cada pieza y cómo se comunican? |
 
-Los PNG exportados y la vista previa de cada uno están en [`docs/diagramas/README.md`](docs/diagramas/README.md).
+Los PNG exportados y la vista previa de cada una están en [`docs/diagramas/README.md`](docs/diagramas/README.md).
 
 ---
 ## Licencia
