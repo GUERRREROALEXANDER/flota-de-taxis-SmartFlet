@@ -1,0 +1,2638 @@
+{
+  "info": {
+    "name": "SmartFlet API",
+    "description": "Pruebas de la API REST de SmartFlet (Spring Boot + MongoDB). Ejecutar en orden con el Collection Runner. Variable baseUrl: http://localhost:8080/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Responde en menos de 2 s\", () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Preparar",
+      "item": [
+        {
+          "name": "Listar vehiculos (comprueba que el backend responde)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Datos unicos para cada corrida: asi la coleccion se puede ejecutar muchas veces.",
+                  "const letras = () => Array.from({length: 3}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(\"\");",
+                  "const num = (n) => String(Math.floor(Math.random() * 10 ** n)).padStart(n, \"0\");",
+                  "const v = (k, x) => pm.collectionVariables.set(k, x);",
+                  "v(\"placa\", letras() + num(3));",
+                  "v(\"placaB\", letras() + num(3));",
+                  "v(\"idConductor\", \"9\" + num(9));",
+                  "v(\"licencia\", \"LIC-\" + num(6));",
+                  "v(\"idPasajero\", \"8\" + num(9));",
+                  "v(\"lugar\", \"Barrio \" + num(5));",
+                  "const pad = (x) => String(x).padStart(2, \"0\");",
+                  "const local = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;",
+                  "const ahora = new Date();",
+                  "v(\"hoy\", local(ahora).slice(0, 10));",
+                  "v(\"turnoInicio\", local(new Date(ahora.getTime() - 3600e3)));",
+                  "v(\"turnoFin\", local(new Date(ahora.getTime() + 8 * 3600e3)));",
+                  "const anio = 1100 + Math.floor(Math.random() * 800); // en el pasado: no se cruza con la tarifa vigente",
+                  "v(\"tarifaFuturaInicio\", anio + \"-01-01\");",
+                  "v(\"tarifaFuturaFin\", anio + \"-12-31\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 · Tarifas",
+      "item": [
+        {
+          "name": "Crear tarifa vigente hoy (409 si ya hay una)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 creada o 409 porque ya existe una vigente\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tarifa Postman\",\n  \"valorBase\": 4500,\n  \"valorPorKm\": 1200,\n  \"fechaInicioVigencia\": \"{{hoy}}\",\n  \"fechaFinVigencia\": \"{{hoy}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tarifa vigente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tiene valor base y valor por km\", () => pm.expect(pm.response.json()).to.include.keys(\"valorBase\",\"valorPorKm\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas/vigente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas",
+                "vigente"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar tarifas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear tarifa futura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"tarifaId\", pm.response.json().id);",
+                  "pm.test(\"estado = ACTIVO\", () => pm.expect(pm.response.json().estado).to.eql(\"ACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Futura {{placa}}\",\n  \"valorBase\": 5000,\n  \"valorPorKm\": 1300,\n  \"fechaInicioVigencia\": \"{{tarifaFuturaInicio}}\",\n  \"fechaFinVigencia\": \"{{tarifaFuturaFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear tarifa con fechas que se cruzan → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: se cruza\", () => pm.expect(pm.response.json().mensaje).to.include(\"se cruza\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cruzada\",\n  \"valorBase\": 5000,\n  \"valorPorKm\": 1300,\n  \"fechaInicioVigencia\": \"{{tarifaFuturaInicio}}\",\n  \"fechaFinVigencia\": \"{{tarifaFuturaFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear tarifa sin datos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato ErrorRespuesta\", () => pm.expect(pm.response.json()).to.include.keys(\"estado\",\"mensaje\",\"errores\",\"fecha\"));",
+                  "pm.test(\"Error en el campo nombre\", () => pm.expect(pm.response.json().errores).to.have.property(\"nombre\"));",
+                  "pm.test(\"Error en el campo valorBase\", () => pm.expect(pm.response.json().errores).to.have.property(\"valorBase\"));",
+                  "pm.test(\"Error en el campo valorPorKm\", () => pm.expect(pm.response.json().errores).to.have.property(\"valorPorKm\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valorPorKm\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modificar tarifa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"nombre = Futura editada\", () => pm.expect(pm.response.json().nombre).to.eql(\"Futura editada\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Futura editada\",\n  \"valorBase\": 5200,\n  \"valorPorKm\": 1350,\n  \"fechaInicioVigencia\": \"{{tarifaFuturaInicio}}\",\n  \"fechaFinVigencia\": \"{{tarifaFuturaFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas/{{tarifaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas",
+                "{{tarifaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Desactivar tarifa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado = INACTIVO\", () => pm.expect(pm.response.json().estado).to.eql(\"INACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas/{{tarifaId}}/desactivar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas",
+                "{{tarifaId}}",
+                "desactivar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modificar tarifa desactivada → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: desactivada\", () => pm.expect(pm.response.json().mensaje).to.include(\"desactivada\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No\",\n  \"valorBase\": 1,\n  \"valorPorKm\": 1,\n  \"fechaInicioVigencia\": \"{{tarifaFuturaInicio}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tarifas/{{tarifaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas",
+                "{{tarifaId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 · Vehiculos",
+      "item": [
+        {
+          "name": "Crear vehiculo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"vehiculoId\", pm.response.json().id);",
+                  "pm.test(\"estadoOperativo = true\", () => pm.expect(pm.response.json().estadoOperativo).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"modelo\": \"Kia Picanto\",\n  \"capacidad\": 4,\n  \"tipo\": \"Hatchback\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear vehiculo con placa repetida → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: placa\", () => pm.expect(pm.response.json().mensaje).to.include(\"placa\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"modelo\": \"Otro\",\n  \"capacidad\": 4,\n  \"tipo\": \"Sedan\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear vehiculo invalido → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato ErrorRespuesta\", () => pm.expect(pm.response.json()).to.include.keys(\"estado\",\"mensaje\",\"errores\",\"fecha\"));",
+                  "pm.test(\"Error en el campo placa\", () => pm.expect(pm.response.json().errores).to.have.property(\"placa\"));",
+                  "pm.test(\"Error en el campo modelo\", () => pm.expect(pm.response.json().errores).to.have.property(\"modelo\"));",
+                  "pm.test(\"Error en el campo capacidad\", () => pm.expect(pm.response.json().errores).to.have.property(\"capacidad\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"12\",\n  \"modelo\": \"\",\n  \"capacidad\": 12,\n  \"tipo\": \"Sedan\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar vehiculos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Incluye el vehiculo creado\", () => pm.expect(pm.response.json().map(v => v.id)).to.include(pm.collectionVariables.get(\"vehiculoId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar vehiculos operativos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos estan operativos\", () => pm.response.json().forEach(v => pm.expect(v.estadoOperativo).to.be.true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos?estadoOperativo=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ],
+              "query": [
+                {
+                  "key": "estadoOperativo",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar vehiculo por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"modelo = Kia Picanto\", () => pm.expect(pm.response.json().modelo).to.eql(\"Kia Picanto\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar vehiculo inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato ErrorRespuesta\", () => pm.expect(pm.response.json()).to.include.keys(\"estado\",\"mensaje\",\"errores\",\"fecha\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/000000000000000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "000000000000000000000000"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar vehiculo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"modelo = Kia Picanto 2025\", () => pm.expect(pm.response.json().modelo).to.eql(\"Kia Picanto 2025\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"modelo\": \"Kia Picanto 2025\",\n  \"capacidad\": 4,\n  \"tipo\": \"Hatchback\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear vehiculo B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"vehiculoBId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placaB}}\",\n  \"modelo\": \"Chevrolet Spark\",\n  \"capacidad\": 4,\n  \"tipo\": \"Hatchback\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sacar vehiculo B de servicio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoOperativo = false\", () => pm.expect(pm.response.json().estadoOperativo).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoOperativo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoBId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoBId}}",
+                "estado"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Conductores",
+      "item": [
+        {
+          "name": "Crear conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"conductorId\", pm.response.json().id);",
+                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"ACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idConductor}}\",\n  \"nombre\": \"Conductor Postman\",\n  \"numeroLicencia\": \"{{licencia}}\",\n  \"fechaVencimientoLicencia\": \"2035-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear conductor con identificacion repetida → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: identificacion\", () => pm.expect(pm.response.json().mensaje).to.include(\"identificacion\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idConductor}}\",\n  \"nombre\": \"Otro\",\n  \"numeroLicencia\": \"LIC-X{{licencia}}\",\n  \"fechaVencimientoLicencia\": \"2035-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear conductor sin datos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error en el campo identificacion\", () => pm.expect(pm.response.json().errores).to.have.property(\"identificacion\"));",
+                  "pm.test(\"Error en el campo nombre\", () => pm.expect(pm.response.json().errores).to.have.property(\"nombre\"));",
+                  "pm.test(\"Error en el campo numeroLicencia\", () => pm.expect(pm.response.json().errores).to.have.property(\"numeroLicencia\"));",
+                  "pm.test(\"Error en el campo fechaVencimientoLicencia\", () => pm.expect(pm.response.json().errores).to.have.property(\"fechaVencimientoLicencia\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar conductores activos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Todos activos\", () => pm.response.json().forEach(c => pm.expect(c.estadoConductor).to.eql(\"ACTIVO\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conductores?estado=ACTIVO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "ACTIVO"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"nombre = Conductor Postman Editado\", () => pm.expect(pm.response.json().nombre).to.eql(\"Conductor Postman Editado\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idConductor}}\",\n  \"nombre\": \"Conductor Postman Editado\",\n  \"numeroLicencia\": \"{{licencia}}\",\n  \"fechaVencimientoLicencia\": \"2035-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores/{{conductorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "{{conductorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Inactivar conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoConductor = INACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"INACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores/{{conductorId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "{{conductorId}}",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Programar turno con conductor inactivo → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: inactivo\", () => pm.expect(pm.response.json().mensaje).to.include(\"inactivo\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"{{turnoInicio}}\",\n  \"fechaFin\": \"{{turnoFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reactivar conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"ACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores/{{conductorId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "{{conductorId}}",
+                "estado"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Pasajeros",
+      "item": [
+        {
+          "name": "Registrar pasajero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"pasajeroId\", pm.response.json().id);",
+                  "pm.test(\"estadoCuenta = ACTIVO\", () => pm.expect(pm.response.json().estadoCuenta).to.eql(\"ACTIVO\"));",
+                  "pm.test(\"Fecha de registro = hoy\", () => pm.expect(pm.response.json().fechaRegistro).to.eql(pm.collectionVariables.get(\"hoy\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idPasajero}}\",\n  \"nombre\": \"Pasajero Postman\",\n  \"telefono\": \"+57 300 123 4567\",\n  \"correoElectronico\": \"postman{{idPasajero}}@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar pasajero repetido → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idPasajero}}\",\n  \"nombre\": \"Otro\",\n  \"telefono\": \"3001112233\",\n  \"correoElectronico\": \"otro@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar pasajero con correo y telefono invalidos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error en el campo telefono\", () => pm.expect(pm.response.json().errores).to.have.property(\"telefono\"));",
+                  "pm.test(\"Error en el campo correoElectronico\", () => pm.expect(pm.response.json().errores).to.have.property(\"correoElectronico\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"123\",\n  \"nombre\": \"Malo\",\n  \"telefono\": \"abc\",\n  \"correoElectronico\": \"no-es-correo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar pasajeros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modificar datos del pasajero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"telefono = 3209998877\", () => pm.expect(pm.response.json().telefono).to.eql(\"3209998877\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idPasajero}}\",\n  \"nombre\": \"Pasajero Postman\",\n  \"telefono\": \"3209998877\",\n  \"correoElectronico\": \"postman{{idPasajero}}@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros/{{pasajeroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros",
+                "{{pasajeroId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Rutas",
+      "item": [
+        {
+          "name": "Crear ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"rutaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"{{lugar}}\",\n  \"destino\": \"Aeropuerto\",\n  \"distanciaKm\": 18.4,\n  \"duracionEstimadaMinutos\": 40\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear ruta repetida → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"{{lugar}}\",\n  \"destino\": \"Aeropuerto\",\n  \"distanciaKm\": 10,\n  \"duracionEstimadaMinutos\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear ruta con origen = destino → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: mismo lugar\", () => pm.expect(pm.response.json().mensaje).to.include(\"mismo lugar\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"Centro\",\n  \"destino\": \"Centro\",\n  \"distanciaKm\": 1,\n  \"duracionEstimadaMinutos\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar rutas por origen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Encuentra la ruta\", () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rutas?origen={{lugar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ],
+              "query": [
+                {
+                  "key": "origen",
+                  "value": "{{lugar}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"duracionEstimadaMinutos = 45\", () => pm.expect(pm.response.json().duracionEstimadaMinutos).to.eql(45));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"{{lugar}}\",\n  \"destino\": \"Aeropuerto\",\n  \"distanciaKm\": 19,\n  \"duracionEstimadaMinutos\": 45\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar ruta eliminada → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 · Turnos",
+      "item": [
+        {
+          "name": "Programar turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"turnoId\", pm.response.json().id);",
+                  "pm.test(\"estado = PROGRAMADO\", () => pm.expect(pm.response.json().estado).to.eql(\"PROGRAMADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"{{turnoInicio}}\",\n  \"fechaFin\": \"{{turnoFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Programar turno que se cruza → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: se cruza\", () => pm.expect(pm.response.json().mensaje).to.include(\"se cruza\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"{{turnoInicio}}\",\n  \"fechaFin\": \"{{turnoFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Programar turno con vehiculo fuera de servicio → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: fuera de servicio\", () => pm.expect(pm.response.json().mensaje).to.include(\"fuera de servicio\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoBId}}\",\n  \"fechaInicio\": \"2031-01-01T06:00:00\",\n  \"fechaFin\": \"2031-01-01T14:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Programar turno con fin antes del inicio → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: posterior\", () => pm.expect(pm.response.json().mensaje).to.include(\"posterior\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"2031-01-02T14:00:00\",\n  \"fechaFin\": \"2031-01-02T06:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Finalizar turno que no ha iniciado → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: EN_CURSO\", () => pm.expect(pm.response.json().mensaje).to.include(\"EN_CURSO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "finalizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado = EN_CURSO\", () => pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "iniciar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar turno ya iniciado → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: PROGRAMADO\", () => pm.expect(pm.response.json().mensaje).to.include(\"PROGRAMADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "iniciar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Turnos del conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Solo turnos de ese conductor\", () => pm.response.json().forEach(t => pm.expect(t.conductorId).to.eql(pm.collectionVariables.get(\"conductorId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos?conductorId={{conductorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ],
+              "query": [
+                {
+                  "key": "conductorId",
+                  "value": "{{conductorId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 · Viajes (ciclo completo)",
+      "item": [
+        {
+          "name": "Solicitar viaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"viajeId\", pm.response.json().id);",
+                  "pm.test(\"estadoViaje = SOLICITADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"SOLICITADO\"));",
+                  "pm.test(\"Guarda copia de la tarifa vigente\", () => { const v = pm.response.json(); pm.expect(v.tarifaValorBase).to.be.a(\"number\"); pm.expect(v.tarifaValorPorKm).to.be.a(\"number\"); });",
+                  "pm.collectionVariables.set(\"valorBase\", pm.response.json().tarifaValorBase);",
+                  "pm.collectionVariables.set(\"valorPorKm\", pm.response.json().tarifaValorPorKm);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pasajeroId\": \"{{pasajeroId}}\",\n  \"origen\": \"{{lugar}}\",\n  \"destino\": \"Aeropuerto El Dorado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Solicitar viaje con origen = destino → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: mismo lugar\", () => pm.expect(pm.response.json().mensaje).to.include(\"mismo lugar\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pasajeroId\": \"{{pasajeroId}}\",\n  \"origen\": \"Centro\",\n  \"destino\": \"Centro\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Solicitar viaje sin pasajero → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error en el campo pasajeroId\", () => pm.expect(pm.response.json().errores).to.have.property(\"pasajeroId\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"A\",\n  \"destino\": \"B\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar viaje sin vehiculo → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: ASIGNADO\", () => pm.expect(pm.response.json().mensaje).to.include(\"ASIGNADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "iniciar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Asignar vehiculo sin turno → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculoId\": \"{{vehiculoBId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "asignar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Asignar vehiculo en turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = ASIGNADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"ASIGNADO\"));",
+                  "pm.test(\"Queda con el vehiculo\", () => pm.expect(pm.response.json().vehiculoId).to.eql(pm.collectionVariables.get(\"vehiculoId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "asignar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar viaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = EN_CURSO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"EN_CURSO\"));",
+                  "pm.test(\"Registra fecha de inicio\", () => pm.expect(pm.response.json().fechaInicio).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "iniciar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sacar de servicio un vehiculo en viaje → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: atendiendo un viaje\", () => pm.expect(pm.response.json().mensaje).to.include(\"atendiendo un viaje\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoOperativo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoId}}",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar viaje en curso → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: antes de iniciar\", () => pm.expect(pm.response.json().mensaje).to.include(\"antes de iniciar\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "cancelar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Finalizar viaje sin metodo de pago → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error en el campo distanciaKm\", () => pm.expect(pm.response.json().errores).to.have.property(\"distanciaKm\"));",
+                  "pm.test(\"Error en el campo metodoPago\", () => pm.expect(pm.response.json().errores).to.have.property(\"metodoPago\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanciaKm\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "finalizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Finalizar viaje y cobrar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = FINALIZADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"FINALIZADO\"));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"Crea el pago (Viaje es Creador de Pago)\", () => { pm.expect(v.pago).to.be.an(\"object\"); pm.expect(v.pago.estadoPago).to.eql(\"PAGADO\"); });",
+                  "pm.test(\"Monto = valor base + valor por km x 12,5 km\", () => { const esperado = Number(pm.collectionVariables.get(\"valorBase\")) + Number(pm.collectionVariables.get(\"valorPorKm\")) * 12.5; pm.expect(Number(v.pago.monto)).to.be.closeTo(esperado, 1); });",
+                  "pm.collectionVariables.set(\"pagoId\", v.pago.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanciaKm\": 12.5,\n  \"metodoPago\": \"TARJETA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "finalizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar viajes finalizados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos finalizados\", () => pm.response.json().forEach(v => pm.expect(v.estadoViaje).to.eql(\"FINALIZADO\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes?estado=FINALIZADO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "FINALIZADO"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Viajes del pasajero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tiene 1 viaje\", () => pm.expect(pm.response.json().length).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes?pasajeroId={{pasajeroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ],
+              "query": [
+                {
+                  "key": "pasajeroId",
+                  "value": "{{pasajeroId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Solicitar segundo viaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"viaje2Id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pasajeroId\": \"{{pasajeroId}}\",\n  \"origen\": \"Aeropuerto El Dorado\",\n  \"destino\": \"{{lugar}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar segundo viaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = CANCELADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"CANCELADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viaje2Id}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viaje2Id}}",
+                "cancelar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Asignar vehiculo a viaje cancelado → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viaje2Id}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viaje2Id}}",
+                "asignar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 · Pagos",
+      "item": [
+        {
+          "name": "Listar pagos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Incluye el pago del viaje\", () => pm.expect(pm.response.json().map(p => p.id)).to.include(pm.collectionVariables.get(\"pagoId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar pago por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"metodoPago = TARJETA\", () => pm.expect(pm.response.json().metodoPago).to.eql(\"TARJETA\"));",
+                  "pm.test(\"Apunta a su viaje\", () => pm.expect(pm.response.json().viajeId).to.eql(pm.collectionVariables.get(\"viajeId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/{{pagoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "{{pagoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anular pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoPago = ANULADO\", () => pm.expect(pm.response.json().estadoPago).to.eql(\"ANULADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/{{pagoId}}/anular",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "{{pagoId}}",
+                "anular"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anular pago ya anulado → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: ya esta anulado\", () => pm.expect(pm.response.json().mensaje).to.include(\"ya esta anulado\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/{{pagoId}}/anular",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "{{pagoId}}",
+                "anular"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 · Cierre y errores generales",
+      "item": [
+        {
+          "name": "Finalizar turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado = FINALIZADO\", () => pm.expect(pm.response.json().estado).to.eql(\"FINALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "finalizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar vehiculo con historial → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: sacalo de servicio\", () => pm.expect(pm.response.json().mensaje).to.include(\"sacalo de servicio\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar vehiculo B sin historial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/{{vehiculoBId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "{{vehiculoBId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Endpoint inexistente → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato ErrorRespuesta\", () => pm.expect(pm.response.json()).to.include.keys(\"estado\",\"mensaje\",\"errores\",\"fecha\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/no-existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "no-existe"
+              ]
+            }
+          }
+        },
+        {
+          "name": "JSON mal formado → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: JSON\", () => pm.expect(pm.response.json().mensaje).to.include(\"JSON\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"placa\": "
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
