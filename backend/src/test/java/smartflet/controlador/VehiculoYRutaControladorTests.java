@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import smartflet.repositorio.RutaRepositorio;
@@ -23,6 +24,8 @@ import smartflet.repositorio.VehiculoRepositorio;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+// Estas pruebas revisan reglas de negocio, no el login: simulan un administrador con sesion.
+@WithMockUser(roles = "ADMINISTRADOR")
 class VehiculoYRutaControladorTests {
 
     private static final String VEHICULO_VALIDO = """

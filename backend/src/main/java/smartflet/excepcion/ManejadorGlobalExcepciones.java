@@ -28,6 +28,23 @@ public class ManejadorGlobalExcepciones {
 
     private static final Logger log = LoggerFactory.getLogger(ManejadorGlobalExcepciones.class);
 
+    /** Login fallido: mismo mensaje si el usuario no existe o si la clave esta mal (no se revela cual). */
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<ErrorRespuesta> manejarCredenciales(CredencialesInvalidasException ex) {
+        String pista = "Revisa que Bloq Mayus este apagado y que el usuario este bien escrito. "
+                + "Te quedan " + ex.getIntentosRestantes() + " intento(s) antes del bloqueo temporal.";
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorRespuesta.conPista(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), pista));
+    }
+
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    public ResponseEntity<ErrorRespuesta> manejarDemasiadosIntentos(DemasiadosIntentosException ex) {
+        String pista = "Espera " + ex.getMinutosRestantes() + " minuto(s) e intenta de nuevo, "
+                + "o pide a un administrador que te asigne una contrasena nueva.";
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ErrorRespuesta.conPista(HttpStatus.TOO_MANY_REQUESTS.value(), ex.getMessage(), pista));
+    }
+
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<ErrorRespuesta> manejarNoEncontrado(RecursoNoEncontradoException ex) {
         return responder(HttpStatus.NOT_FOUND, ex.getMessage());

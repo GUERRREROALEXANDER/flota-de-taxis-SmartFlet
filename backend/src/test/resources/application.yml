@@ -6,6 +6,15 @@ spring:
     mongodb:
       auto-index-creation: true
 
+smartflet:
+  admin:
+    usuario: admin
+    nombre: Administrador de pruebas
+    clave: clave-de-pruebas
+  login:
+    intentos-maximos: 3
+    minutos-bloqueo: 5
+
 de:
   flapdoodle:
     mongodb:

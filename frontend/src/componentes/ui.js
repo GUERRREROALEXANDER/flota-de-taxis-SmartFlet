@@ -194,6 +194,11 @@ export const iconos = {
     tarifa: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
     papelera: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
     tema: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    salir: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+    candado: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    escudo: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+    ojoCerrado: '<path d="M17.9 17.9A10 10 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 4.1-4.9M9.9 5.2A9 9 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M2 2l20 20"/>',
+    bombilla: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2Z"/>',
 };
 
 /**
@@ -255,14 +260,22 @@ export function esqueletoKpi(cantidad = 4) {
     }</div>`;
 }
 
-/** Tarjeta de indicador del panel. */
-export function tarjetaKpi({ etiqueta, valor, detalle = '', tono = 'informativo', icono: nombreIcono = 'panel' }) {
+/**
+ * Tarjeta de indicador del panel.
+ * Si `valor` es un numero, la cifra "cuenta" desde 0 al aparecer (componentes/animaciones.js);
+ * `formatoValor` ('numero' o 'dinero') decide como se escribe mientras cuenta.
+ */
+export function tarjetaKpi({ etiqueta, valor, detalle = '', tono = 'informativo', icono: nombreIcono = 'panel',
+                             formatoValor = 'numero' }) {
+    const esNumero = typeof valor === 'number' && Number.isFinite(valor);
+    const texto = esNumero ? (formatoValor === 'dinero' ? formato.dinero(valor) : formato.numero(valor)) : valor;
+    const contar = esNumero ? ` data-contar="${valor}" data-formato="${esc(formatoValor)}"` : '';
     return `
         <article class="tarjeta-kpi kpi--${esc(tono)}">
             <div class="tarjeta-kpi__fila">
                 <div>
                     <p class="tarjeta-kpi__etiqueta">${esc(etiqueta)}</p>
-                    <p class="tarjeta-kpi__valor">${esc(valor)}</p>
+                    <p class="tarjeta-kpi__valor"${contar}>${esc(texto)}</p>
                     ${detalle ? `<p class="tarjeta-kpi__detalle">${esc(detalle)}</p>` : ''}
                 </div>
                 <div class="tarjeta-kpi__icono">${icono(nombreIcono)}</div>
@@ -524,6 +537,15 @@ export function manejarError(error, formulario = null) {
         return;
     }
     if (error instanceof ErrorApi) {
+        if (error.sinSesion) return; // app/sesion.js ya muestra la pantalla de acceso
+        if (error.sinPermiso) {
+            aviso('advertencia', error.message, error.pista || '', 9000);
+            return;
+        }
+        if (error.pista) {
+            aviso('advertencia', error.message, error.pista, 9000);
+            return;
+        }
         if (error.esReglaNegocio) {
             aviso('advertencia', 'Regla de negocio', error.message, 8000);
             return;

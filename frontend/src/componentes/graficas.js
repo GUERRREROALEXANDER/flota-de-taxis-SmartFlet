@@ -161,7 +161,7 @@ export function areaTemporal(serie, { campo = 'total', etiqueta = 'servicios', a
     }).join('');
 
     const marcadores = serie.map((punto, indice) => `
-        <circle class="grafica__punto" cx="${x(indice).toFixed(1)}" cy="${y(valores[indice]).toFixed(1)}" r="3">
+        <circle class="grafica__punto" style="--i:${indice}" cx="${x(indice).toFixed(1)}" cy="${y(valores[indice]).toFixed(1)}" r="3">
             <title>${esc(formato.fecha(`${punto.fecha}T00:00:00`))}: ${valores[indice]} ${esc(etiqueta)}</title>
         </circle>`).join('');
 
@@ -178,7 +178,7 @@ export function areaTemporal(serie, { campo = 'total', etiqueta = 'servicios', a
             </defs>
             ${referencias}
             <path class="grafica__area" d="${area}"/>
-            <path class="grafica__linea" d="${linea}"/>
+            <path class="grafica__linea" d="${linea}" pathLength="1"/>
             ${marcadores}
             ${etiquetasEjeX}
         </svg>`;
@@ -208,7 +208,7 @@ export function barrasVerticales(serie, { campo = 'total', etiqueta = 'servicios
         const alto = (valores[indice] / maximo) * altoUtil;
         const posX = margen.izquierda + indice * anchoRanura + (anchoRanura - anchoBarra) / 2;
         const posY = margen.arriba + altoUtil - alto;
-        return `<rect class="grafica__barra" x="${posX.toFixed(1)}" y="${posY.toFixed(1)}"
+        return `<rect class="grafica__barra" style="--i:${indice}" x="${posX.toFixed(1)}" y="${posY.toFixed(1)}"
                       width="${anchoBarra.toFixed(1)}" height="${Math.max(alto, 1).toFixed(1)}"
                       rx="3" fill="var(--primario)">
                     <title>${esc(formato.fecha(`${punto.fecha}T00:00:00`))}: ${valores[indice]} ${esc(etiqueta)}</title>
@@ -251,7 +251,7 @@ export function barrasHorizontales(items, { formatoValor = (v) => formato.numero
 
     const tope = maximo ?? Math.max(...items.map((item) => Number(item.valor) || 0), 1);
 
-    return `<div class="pila pila--compacta">${items.map((item) => {
+    return `<div class="pila pila--compacta">${items.map((item, indice) => {
         const valor = Number(item.valor) || 0;
         const ancho = tope === 0 ? 0 : (valor / tope) * 100;
         return `
@@ -265,7 +265,7 @@ export function barrasHorizontales(items, { formatoValor = (v) => formato.numero
                 </div>
                 <div class="barra-progreso">
                     <div class="barra-progreso__relleno"
-                         style="width:${ancho.toFixed(1)}%;background:${colorDeTono(item.tono || 'informativo')}"></div>
+                         style="width:${ancho.toFixed(1)}%;background:${colorDeTono(item.tono || 'informativo')};--i:${indice}"></div>
                 </div>
                 ${item.detalle ? `<p style="font-size:.6875rem;color:var(--texto-tenue);margin-top:3px">${esc(item.detalle)}</p>` : ''}
             </div>`;

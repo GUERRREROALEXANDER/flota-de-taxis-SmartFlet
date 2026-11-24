@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -37,6 +38,8 @@ import smartflet.repositorio.ViajeRepositorio;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+// Estas pruebas revisan reglas de negocio, no el login: simulan un administrador con sesion.
+@WithMockUser(roles = "ADMINISTRADOR")
 class DespachoViajeControladorTests {
 
     @Autowired private MockMvc mockMvc;

@@ -9,6 +9,7 @@ import { estadoViaje } from '../componentes/estados.js';
 import { anillo, areaTemporal } from '../componentes/graficas.js';
 import { serieDiaria, distribucionViajes, sumaPagados, dia, haceDias } from '../componentes/estadisticas.js';
 import { irA, fijarContador } from '../app/enrutador.js';
+import { sesion } from '../app/sesion.js';
 
 export async function render(contenedor) {
     contenedor.innerHTML = `
@@ -36,6 +37,7 @@ export async function render(contenedor) {
     const placas = new Map(vehiculos.map((v) => [v.id, v.placa]));
 
     contenedor.innerHTML = `
+        ${saludo(activos.length, pendientes.length, enTurno.size)}
         <div class="rejilla-kpi animar-entrada">
             ${tarjetaKpi({ etiqueta: 'Flota', valor: vehiculos.length,
                 detalle: `${operativos} operativos`, tono: 'informativo', icono: 'taxi' })}
@@ -45,7 +47,7 @@ export async function render(contenedor) {
                 detalle: 'Viajes solicitados', tono: pendientes.length ? 'advertencia' : 'neutro', icono: 'servicio' })}
             ${tarjetaKpi({ etiqueta: 'En curso', valor: viajes.filter((v) => v.estadoViaje === 'EN_CURSO').length,
                 detalle: 'Pasajeros a bordo', tono: 'informativo', icono: 'reproducir' })}
-            ${tarjetaKpi({ etiqueta: 'Ingresos de hoy', valor: formato.dinero(sumaPagados(finalizadosHoy)),
+            ${tarjetaKpi({ etiqueta: 'Ingresos de hoy', valor: sumaPagados(finalizadosHoy), formatoValor: 'dinero',
                 detalle: `${finalizadosHoy.length} viaje${finalizadosHoy.length === 1 ? '' : 's'} cerrado${finalizadosHoy.length === 1 ? '' : 's'}`,
                 tono: 'positivo', icono: 'dinero' })}
         </div>
@@ -64,6 +66,30 @@ export async function render(contenedor) {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); irA(el.dataset.irA); }
         });
     });
+}
+
+/** Encabezado con saludo segun la hora, fecha y un resumen en una frase. */
+function saludo(activos, pendientes, enTurno) {
+    const hora = new Date().getHours();
+    const momento = hora < 12 ? 'Buenos dias' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+    const nombre = (sesion.usuario?.nombre || '').split(' ')[0];
+    const fecha = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+    const resumen = pendientes
+        ? `Hay ${pendientes} viaje${pendientes === 1 ? '' : 's'} esperando vehiculo.`
+        : activos ? `${activos} viaje${activos === 1 ? '' : 's'} en marcha y ${enTurno} vehiculo${enTurno === 1 ? '' : 's'} en turno.`
+            : 'Sin viajes pendientes por ahora.';
+    return `
+        <section class="saludo">
+            <div class="saludo__texto">
+                <p class="saludo__fecha">${esc(fecha)}</p>
+                <h2 class="saludo__titulo">${esc(momento)}${nombre ? `, <span class="texto-degradado">${esc(nombre)}</span>` : ''}</h2>
+                <p class="saludo__resumen">${esc(resumen)}</p>
+            </div>
+            <div class="saludo__estado">
+                <span class="pulso-vivo" aria-hidden="true"></span>
+                <span>En vivo</span>
+            </div>
+        </section>`;
 }
 
 function tarjeta(titulo, subtitulo, cuerpo, sinRelleno = false) {

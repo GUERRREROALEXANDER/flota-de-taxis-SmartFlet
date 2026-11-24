@@ -1,0 +1,8 @@
+# Lo que Docker NO copia al construir la imagen (mas rapido y sin secretos).
+.git
+.env
+**/node_modules
+**/dist
+**/target
+docs
+*.md
