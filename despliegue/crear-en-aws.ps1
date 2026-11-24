@@ -86,7 +86,17 @@ $id = aws ec2 run-instances --image-id $ami --instance-type $TipoInstancia `
     --query 'Instances[0].InstanceId' --output text
 Write-Host "4. Instancia $id creada; esperando a que arranque..." -ForegroundColor Green
 aws ec2 wait instance-running --instance-ids $id
-$ip = aws ec2 describe-instances --instance-ids $id --query 'Reservations[0].Instances[0].PublicIpAddress' --output text
+
+# ---------- 5. IP elastica: la URL no cambia aunque apagues y enciendas la instancia ----------
+$alloc = aws ec2 describe-addresses --filters 'Name=tag:Name,Values=smartflet' --query 'Addresses[0].AllocationId' --output text
+if (-not $alloc -or $alloc -eq 'None') {
+    $alloc = aws ec2 allocate-address --domain vpc `
+        --tag-specifications 'ResourceType=elastic-ip,Tags=[{Key=Name,Value=smartflet},{Key=proyecto,Value=smartflet}]' `
+        --query AllocationId --output text
+}
+aws ec2 associate-address --instance-id $id --allocation-id $alloc | Out-Null
+$ip = aws ec2 describe-addresses --allocation-ids $alloc --query 'Addresses[0].PublicIp' --output text
+Write-Host "5. IP elastica $ip asociada" -ForegroundColor Green
 
 Write-Host ''
 Write-Host "Listo. La app tarda ~5-10 min en compilarse dentro de la instancia." -ForegroundColor Cyan

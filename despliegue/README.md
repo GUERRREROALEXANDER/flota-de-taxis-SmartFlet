@@ -16,6 +16,7 @@ Navegador ──HTTP :80──► EC2 (Amazon Linux 2023)
 | MongoDB en la misma instancia | Cero costo extra y sin depender de otro servicio | MongoDB Atlas (cambiar `MONGODB_URI` en `.env`) |
 | Sin SSH: **Session Manager** | No se abre el puerto 22; se entra con `aws ssm start-session` | Par de claves + puerto 22 |
 | Clave del admin en **Parameter Store** (cifrada) | No queda en el repo ni en el script | Escribirla a mano en `.env` |
+| **IP elastica** | La URL no cambia aunque apagues y enciendas la instancia | IP publica normal (cambia en cada encendido) |
 | Swap de 2 GB | Java + Mongo + compilar en 1 GB de RAM no cabe | Usar `t3.small` (2 GB) |
 
 > ⚠️ **HTTP sin cifrar**: la contraseña viaja en texto plano. Sirve para una demo de clase; para algo real

@@ -10,6 +10,9 @@ if ($ids) {
     aws ec2 terminate-instances --instance-ids $ids.Split() | Out-Null
     Write-Host "Terminando $ids..."; aws ec2 wait instance-terminated --instance-ids $ids.Split()
 }
+# Una IP elastica sin instancia se sigue cobrando: hay que liberarla.
+$alloc = aws ec2 describe-addresses --filters 'Name=tag:Name,Values=smartflet' --query 'Addresses[0].AllocationId' --output text
+if ($alloc -and $alloc -ne 'None') { aws ec2 release-address --allocation-id $alloc; Write-Host "IP elastica liberada" }
 $sg = aws ec2 describe-security-groups --filters 'Name=group-name,Values=smartflet-web' --query 'SecurityGroups[0].GroupId' --output text
 if ($sg -and $sg -ne 'None') { aws ec2 delete-security-group --group-id $sg }
 $rol = 'smartflet-ec2-rol'
