@@ -6,7 +6,7 @@
 param([string]$Rama = 'main')
 $ErrorActionPreference = 'Stop'
 
-$id = aws ec2 describe-instances --filters Name=tag:Name,Values=smartflet Name=instance-state-name,Values=running `
+$id = aws ec2 describe-instances --filters 'Name=tag:Name,Values=smartflet' 'Name=instance-state-name,Values=running' `
     --query 'Reservations[0].Instances[0].InstanceId' --output text
 if ($id -eq 'None') { throw 'No hay una instancia "smartflet" encendida. ¿La creaste con crear-en-aws.ps1?' }
 

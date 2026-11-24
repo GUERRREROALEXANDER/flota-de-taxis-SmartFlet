@@ -59,9 +59,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ---------- 3. Grupo de seguridad (solo puerto 80) ----------
-$vpc = aws ec2 describe-vpcs --filters Name=is-default,Values=true --query 'Vpcs[0].VpcId' --output text
-$sg = aws ec2 describe-security-groups --filters Name=group-name,Values=smartflet-web Name=vpc-id,Values=$vpc --query 'SecurityGroups[0].GroupId' --output text
-if ($sg -eq 'None') {
+$vpc = aws ec2 describe-vpcs --filters 'Name=is-default,Values=true' --query 'Vpcs[0].VpcId' --output text
+# Comillas obligatorias: sin ellas PowerShell parte "Name=vpc-id,Values=$vpc" en dos argumentos por la coma.
+$sg = aws ec2 describe-security-groups --filters 'Name=group-name,Values=smartflet-web' "Name=vpc-id,Values=$vpc" --query 'SecurityGroups[0].GroupId' --output text
+if (-not $sg -or $sg -eq 'None') {
     $sg = aws ec2 create-security-group --group-name smartflet-web --description 'SmartFlet: HTTP publico' --vpc-id $vpc --query GroupId --output text
     aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp --port 80 --cidr 0.0.0.0/0 | Out-Null
     Write-Host "3. Grupo de seguridad $sg creado (solo puerto 80)" -ForegroundColor Green

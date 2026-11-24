@@ -5,7 +5,7 @@
 param([string]$Instancia)
 $ErrorActionPreference = 'Stop'
 if (-not $Instancia) {
-    $Instancia = aws ec2 describe-instances --filters Name=tag:Name,Values=smartflet Name=instance-state-name,Values=running `
+    $Instancia = aws ec2 describe-instances --filters 'Name=tag:Name,Values=smartflet' 'Name=instance-state-name,Values=running' `
         --query 'Reservations[0].Instances[0].InstanceId' --output text
 }
 $ip = aws ec2 describe-instances --instance-ids $Instancia --query 'Reservations[0].Instances[0].PublicIpAddress' --output text

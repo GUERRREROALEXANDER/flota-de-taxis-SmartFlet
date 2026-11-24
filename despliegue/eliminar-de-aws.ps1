@@ -4,13 +4,13 @@
       .\despliegue\eliminar-de-aws.ps1
 #>
 $ErrorActionPreference = 'Continue'
-$ids = aws ec2 describe-instances --filters Name=tag:Name,Values=smartflet Name=instance-state-name,Values=pending,running,stopping,stopped `
+$ids = aws ec2 describe-instances --filters 'Name=tag:Name,Values=smartflet' 'Name=instance-state-name,Values=pending,running,stopping,stopped' `
     --query 'Reservations[].Instances[].InstanceId' --output text
 if ($ids) {
     aws ec2 terminate-instances --instance-ids $ids.Split() | Out-Null
     Write-Host "Terminando $ids..."; aws ec2 wait instance-terminated --instance-ids $ids.Split()
 }
-$sg = aws ec2 describe-security-groups --filters Name=group-name,Values=smartflet-web --query 'SecurityGroups[0].GroupId' --output text
+$sg = aws ec2 describe-security-groups --filters 'Name=group-name,Values=smartflet-web' --query 'SecurityGroups[0].GroupId' --output text
 if ($sg -and $sg -ne 'None') { aws ec2 delete-security-group --group-id $sg }
 $rol = 'smartflet-ec2-rol'
 aws iam remove-role-from-instance-profile --instance-profile-name $rol --role-name $rol 2>$null
