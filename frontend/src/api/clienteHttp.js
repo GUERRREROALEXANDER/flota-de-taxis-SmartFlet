@@ -12,11 +12,21 @@
 
 /** Error devuelto por la API, con el codigo HTTP y los errores por campo. */
 export class ErrorApi extends Error {
-    constructor(mensaje, { estado = 0, campos = null } = {}) {
+    constructor(mensaje, { estado = 0, campos = null, pista = null } = {}) {
         super(mensaje);
         this.name = 'ErrorApi';
         this.estado = estado;
         this.campos = campos && Object.keys(campos).length ? campos : null;
+        /** Sugerencia del backend sobre que revisar (ErrorRespuesta.pista). */
+        this.pista = pista;
+    }
+
+    get sinSesion() {
+        return this.estado === 401;
+    }
+
+    get sinPermiso() {
+        return this.estado === 403;
     }
 
     /** 400 sin errores de campo: el backend rechazo la operacion por una regla de negocio. */
@@ -84,9 +94,15 @@ export class ClienteHttp {
         const datos = tipo.includes('json') ? await respuesta.json().catch(() => null) : null;
 
         if (!respuesta.ok) {
+            // 401 fuera del login = la sesion expiro: app/sesion.js escucha este evento
+            // y vuelve a mostrar la pantalla de acceso.
+            if (respuesta.status === 401 && !ruta.startsWith('/auth/')) {
+                window.dispatchEvent(new CustomEvent('smartflet:sesion-expirada'));
+            }
             throw new ErrorApi(datos?.mensaje || `Error ${respuesta.status} al procesar la solicitud.`, {
                 estado: respuesta.status,
                 campos: datos?.errores,
+                pista: datos?.pista,
             });
         }
         return datos;

@@ -82,3 +82,17 @@ export const pagosApi = {
     obtener: (id) => http.get(`/pagos/${id}`),
     anular: (id) => http.patch(`/pagos/${id}/anular`),
 };
+
+/** AutenticacionControlador → /api/auth (la sesion viaja en la cookie JSESSIONID). */
+export const autenticacionApi = {
+    iniciarSesion: (usuario, clave) => http.post('/auth/login', { usuario, clave }),
+    sesionActual: () => http.get('/auth/sesion'),
+    cerrarSesion: () => http.post('/auth/logout'),
+};
+
+/** UsuarioControlador → /api/usuarios (solo ADMINISTRADOR). */
+export const usuariosApi = {
+    listar: () => http.get('/usuarios'),
+    crear: (datos) => http.post('/usuarios', datos),
+    cambiarEstado: (id, estado) => http.patch(`/usuarios/${id}/estado`, { estado }),
+};

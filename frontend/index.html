@@ -12,7 +12,16 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap">
 </head>
 <body>
-<div id="aplicacion" class="disposicion">
+<!-- Pantalla de inicio de sesion (vistas/acceso.js). Se muestra mientras no haya sesion. -->
+<div id="pantalla-acceso" hidden></div>
+
+<!-- Pantalla de carga mientras se pregunta al backend si ya hay sesion -->
+<div id="arranque" class="arranque" aria-live="polite">
+    <div class="arranque__logo"></div>
+    <p>Conectando con el centro de operaciones…</p>
+</div>
+
+<div id="aplicacion" class="disposicion" hidden>
 
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
 
@@ -43,6 +52,17 @@
                 <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 <span id="etiqueta-tema">Tema claro</span>
             </button>
+            <!-- Quien tiene la sesion abierta (lo llena main.js) -->
+            <div class="usuario usuario--pie">
+                <span class="usuario__avatar" id="usuario-avatar">?</span>
+                <span class="usuario__datos">
+                    <span class="usuario__nombre" id="usuario-nombre"></span>
+                    <span class="usuario__rol" id="usuario-rol"></span>
+                </span>
+                <button class="boton-icono" id="cerrar-sesion" aria-label="Cerrar sesion" title="Cerrar sesion">
+                    <svg viewBox="0 0 24 24" class="icono" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+            </div>
         </div>
     </aside>
 

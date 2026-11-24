@@ -1,0 +1,3 @@
+# Los scripts que corren en Linux (EC2 / Docker) deben tener saltos de linea LF.
+*.sh text eol=lf
+mvnw text eol=lf

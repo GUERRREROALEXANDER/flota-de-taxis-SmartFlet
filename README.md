@@ -126,6 +126,10 @@ Decisiones:
 | Turnos | `GET/POST /api/turnos` (`?conductorId=`), `GET /api/turnos/{id}`, `PATCH /api/turnos/{id}/iniciar` y `/finalizar` |
 | Viajes | `GET/POST /api/viajes` (`?estado=`, `?pasajeroId=`), `GET /api/viajes/{id}`, `PATCH /api/viajes/{id}/asignar`, `/iniciar`, `/finalizar`, `/cancelar` |
 | Pagos | `GET /api/pagos`, `GET /api/pagos/{id}`, `PATCH /api/pagos/{id}/anular` |
+| Sesión | `POST /api/auth/login`, `GET /api/auth/sesion`, `POST /api/auth/logout` |
+| Usuarios (solo admin) | `GET/POST /api/usuarios`, `PATCH /api/usuarios/{id}/estado` |
+
+**Permisos:** cualquier usuario con sesión consulta (GET) todo; `OPERADOR` además opera viajes, turnos y pasajeros; el resto es solo `ADMINISTRADOR`. Sin sesión → 401, sin permiso → 403; ambos traen un campo `pista` que dice qué hacer. Las reglas están en `seguridad/ConfiguracionSeguridad.java` (método `reglasDeAcceso`).
 
 ---
 
@@ -169,6 +173,14 @@ npm install   # solo la primera vez
 npm run dev   # http://localhost:5173
 ```
 
+### 4.4 Inicio de sesión
+
+Al primer arranque se crea el administrador con `ADMIN_USUARIO` / `ADMIN_CLAVE` del `.env` (si `ADMIN_CLAVE` está vacía, se genera una y se imprime en el log). Desde **Usuarios** el administrador crea cuentas de operador. Las contraseñas se guardan con BCrypt y la sesión expira tras `SESION_MINUTOS` sin actividad; tras 5 intentos fallidos el usuario se bloquea 5 minutos.
+
+### 4.5 Despliegue en AWS
+
+Una instancia EC2 con Docker Compose (app + MongoDB). Scripts y explicación en [`despliegue/README.md`](despliegue/README.md).
+
 ---
 
 ## 5. Estructura de directorios
@@ -200,7 +212,7 @@ flota-de-taxis-SmartFlet/
 └── docs/diagramas/              # 5 vistas de arquitectura (Visual Paradigm)
 ```
 
-Pendiente: autenticación y roles, ubicación en tiempo real y mantenimiento de vehículos.
+Pendiente: ubicación en tiempo real y mantenimiento de vehículos.
 
 ---
 
