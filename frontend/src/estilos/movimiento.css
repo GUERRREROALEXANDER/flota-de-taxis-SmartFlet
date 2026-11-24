@@ -1,0 +1,401 @@
+/* ==========================================================================
+   movimiento.css — capa visual y animaciones (se carga despues de app.css)
+
+   Indice
+     1. Utilidades (hidden, texto degradado, aurora)
+     2. Pantalla de arranque
+     3. Pantalla de acceso (login)
+     4. Transiciones entre pantallas
+     5. Panel: saludo y tarjetas KPI
+     6. Graficas animadas
+     7. Tablas, menu y usuario
+     8. Keyframes
+
+   Todo respeta "reducir movimiento": la regla de app.css (prefers-reduced-motion)
+   deja cada animacion directamente en su estado final.
+   ========================================================================== */
+
+/* 1. Utilidades ------------------------------------------------------------ */
+
+/* .disposicion usa display:grid y ganaria al atributo hidden sin esto. */
+[hidden] { display: none !important; }
+
+.texto-degradado {
+    background: linear-gradient(90deg, var(--marca), #FFD98A 35%, var(--primario) 70%, var(--marca));
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: deslizar-degradado 8s linear infinite;
+}
+/* En tema claro el amarillo palido no se lee sobre blanco: tonos mas oscuros. */
+[data-tema="claro"] .texto-degradado {
+    background-image: linear-gradient(90deg, #B45309, #D97706 35%, var(--primario) 70%, #B45309);
+}
+
+/* Manchas de luz difuminadas que se mueven despacio detras del contenido. */
+.fondo-aurora {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+.fondo-aurora span {
+    position: absolute;
+    width: 46vmax;
+    height: 46vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.32;
+    animation: flotar 22s ease-in-out infinite alternate;
+}
+.fondo-aurora span:nth-child(1) { background: var(--primario); top: -18vmax; left: -10vmax; }
+.fondo-aurora span:nth-child(2) { background: var(--marca); bottom: -22vmax; right: -12vmax; opacity: 0.2; animation-delay: -7s; }
+.fondo-aurora span:nth-child(3) { background: #8B5CF6; top: 30%; left: 40%; width: 30vmax; height: 30vmax; opacity: 0.16; animation-delay: -14s; }
+[data-tema="claro"] .fondo-aurora span { opacity: 0.16; }
+
+/* 2. Arranque -------------------------------------------------------------- */
+
+.arranque {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--e4);
+    background: var(--fondo);
+    color: var(--texto-tenue);
+    font-size: 0.875rem;
+    z-index: 100;
+}
+.arranque__logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--marca);
+    box-shadow: 0 0 0 0 rgba(245, 185, 59, 0.5);
+    animation: latido 1.4s ease-in-out infinite;
+}
+
+/* 3. Acceso (login) -------------------------------------------------------- */
+
+#pantalla-acceso { position: relative; min-height: 100vh; }
+.acceso { position: relative; }
+.acceso__marca, .acceso__panel { position: relative; z-index: 1; }
+.acceso__marca { background: transparent; }
+.acceso__marca-contenido > * { animation: aparecer-fila 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.acceso__marca-contenido > :nth-child(2) { animation-delay: 80ms; }
+.acceso__marca-contenido > :nth-child(3) { animation-delay: 160ms; }
+.acceso__marca-contenido > :nth-child(4) { animation-delay: 240ms; }
+.acceso__marca-contenido > :nth-child(5) { animation-delay: 320ms; }
+
+.acceso__logo svg { filter: drop-shadow(0 8px 24px rgba(245, 185, 59, 0.35)); }
+
+/* Tarjeta de vidrio esmerilado para el formulario */
+.tarjeta-vidrio {
+    padding: var(--e6);
+    border-radius: var(--radio-xl);
+    background: color-mix(in srgb, var(--superficie) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--borde-fuerte) 70%, transparent);
+    backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: var(--sombra-l), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    animation: aparecer-modal 650ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+.acceso__formulario.sacudir { animation: sacudir 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+.acceso__formulario.saliendo-acceso { animation: salir-acceso 380ms ease-in both; }
+.acceso__error, .acceso__motivo { margin-bottom: var(--e4); animation: aparecer-arriba 240ms ease both; }
+
+.acceso__mayus {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--advertencia);
+    font-weight: 500;
+    animation: aparecer-arriba 200ms ease both;
+}
+.acceso__mayus .icono { width: 14px; height: 14px; }
+
+.acceso__pista {
+    display: flex;
+    gap: var(--e3);
+    margin-top: var(--e5);
+    padding: var(--e3) var(--e4);
+    border-radius: var(--radio-m);
+    background: var(--advertencia-fondo);
+    border: 1px dashed var(--advertencia-borde);
+    font-size: 0.75rem;
+    color: var(--texto-medio);
+    line-height: 1.5;
+}
+.acceso__pista > .icono { width: 18px; height: 18px; color: var(--advertencia); flex-shrink: 0; margin-top: 1px; }
+.acceso__pista code {
+    font-family: var(--tipo-dato);
+    font-size: 0.6875rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--superficie-suave);
+    color: var(--texto);
+}
+
+/* Escena animada: ciudad, rutas y taxis */
+.escena { width: 100%; max-width: 30rem; margin: 0 0 var(--e5); overflow: visible; }
+.escena__edificios rect { fill: var(--superficie-alta); stroke: var(--borde-fuerte); stroke-width: 1; }
+.escena__ventanas rect { fill: var(--marca); opacity: 0.15; animation: titilar 4s ease-in-out infinite; animation-delay: var(--d); }
+.escena__calle { stroke: var(--borde-fuerte); stroke-width: 2; stroke-dasharray: 14 10; animation: avanzar-calle 1.2s linear infinite; }
+.escena__ruta {
+    fill: none;
+    stroke: url(#escenaRuta);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 6 10;
+    animation: avanzar-calle 1.6s linear infinite;
+}
+.escena__ruta--2 { opacity: 0.55; animation-duration: 2.3s; animation-direction: reverse; }
+.escena__taxi rect { fill: var(--marca); }
+.escena__taxi circle { fill: var(--fondo); stroke: var(--marca); stroke-width: 1.5; }
+.escena__taxi {
+    offset-rotate: auto;
+    filter: drop-shadow(0 0 8px rgba(245, 185, 59, 0.7));
+    animation: recorrer 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.escena__taxi--1 { offset-path: path("M10 230 C 120 170, 200 250, 260 200 S 400 120, 470 160"); }
+.escena__taxi--2 { offset-path: path("M10 180 C 90 220, 180 120, 270 150 S 390 230, 470 200"); animation-duration: 9s; animation-delay: -4s; }
+.escena__pulso { fill: var(--primario); transform-box: fill-box; transform-origin: center; animation: onda 2.2s ease-out infinite; }
+.escena__pulso--2 { fill: var(--positivo); animation-delay: -1.1s; }
+
+/* Boton con destello que cruza al pasar el cursor */
+.boton--brillo { position: relative; overflow: hidden; gap: var(--e2); }
+.boton--brillo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 700ms ease;
+}
+.boton--brillo:hover::before { transform: translateX(120%); }
+.boton--brillo { box-shadow: 0 8px 24px -8px var(--primario); }
+
+/* 4. Transiciones entre pantallas ------------------------------------------ */
+
+.aplicacion-entrando { animation: desvanecer 450ms ease both; }
+.aplicacion-entrando .lateral { animation: entrar-izquierda 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vista-entrando { animation: entrar-vista 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vista-entrando > * { animation: aparecer-fila 480ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.vista-entrando > :nth-child(2) { animation-delay: 60ms; }
+.vista-entrando > :nth-child(3) { animation-delay: 120ms; }
+.vista-entrando > :nth-child(4) { animation-delay: 180ms; }
+.vista-entrando > :nth-child(n+5) { animation-delay: 240ms; }
+
+/* 5. Panel: saludo y KPIs -------------------------------------------------- */
+
+.saludo {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--e4);
+    padding: var(--e5) var(--e6);
+    margin-bottom: var(--e5);
+    border-radius: var(--radio-xl);
+    border: 1px solid var(--borde);
+    background:
+        radial-gradient(500px 200px at 0% 0%, color-mix(in srgb, var(--primario) 22%, transparent), transparent 70%),
+        radial-gradient(400px 200px at 100% 100%, color-mix(in srgb, var(--marca) 16%, transparent), transparent 70%),
+        var(--superficie);
+    overflow: hidden;
+}
+.saludo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--borde) 1px, transparent 1px),
+        linear-gradient(90deg, var(--borde) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.25;
+    mask-image: linear-gradient(90deg, transparent, #000 60%);
+    animation: avanzar-reticula 18s linear infinite;
+    pointer-events: none;
+}
+.saludo__texto, .saludo__estado { position: relative; z-index: 1; }
+.saludo__fecha { font-size: 0.75rem; color: var(--texto-tenue); letter-spacing: 0.04em; }
+.saludo__fecha::first-letter { text-transform: uppercase; }
+.saludo__titulo { font-size: clamp(1.4rem, 2.4vw, 1.9rem); letter-spacing: -0.02em; margin: 2px 0 4px; }
+.saludo__resumen { color: var(--texto-medio); font-size: 0.875rem; }
+.saludo__estado {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--e2);
+    padding: 6px 12px;
+    border-radius: 99px;
+    background: var(--positivo-fondo);
+    border: 1px solid var(--positivo-borde);
+    color: var(--positivo);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.pulso-vivo {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--positivo);
+    box-shadow: 0 0 0 0 var(--positivo);
+    animation: latido-verde 1.8s ease-out infinite;
+}
+
+/* KPI: elevacion, luz que sigue al cursor y franja superior animada */
+.tarjeta-kpi {
+    transition: border-color var(--transicion), transform 300ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms ease;
+    isolation: isolate;
+}
+.tarjeta-kpi:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -18px var(--acento-kpi, var(--primario));
+    border-color: color-mix(in srgb, var(--acento-kpi, var(--primario)) 45%, var(--borde));
+}
+.tarjeta-kpi::before {
+    background: linear-gradient(90deg, transparent, var(--acento-kpi, var(--primario)), transparent);
+    background-size: 200% 100%;
+    animation: deslizar-degradado 3.5s linear infinite;
+}
+.tarjeta-kpi::after, .tarjeta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(260px circle at var(--x, -300px) var(--y, -300px),
+                color-mix(in srgb, var(--acento-kpi, var(--primario)) 14%, transparent), transparent 70%);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+    z-index: -1;
+}
+.tarjeta-kpi:hover::after, .tarjeta:hover::after { opacity: 1; }
+.tarjeta { position: relative; isolation: isolate; transition: border-color var(--transicion); }
+.tarjeta:hover { border-color: var(--borde-fuerte); }
+.tarjeta-kpi__icono { transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tarjeta-kpi:hover .tarjeta-kpi__icono { transform: scale(1.12) rotate(-6deg); }
+.tarjeta-kpi__valor { transition: color var(--transicion); }
+
+.rejilla-kpi.animar-entrada > * { animation: aparecer-kpi 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rejilla-kpi.animar-entrada > :nth-child(2) { animation-delay: 70ms; }
+.rejilla-kpi.animar-entrada > :nth-child(3) { animation-delay: 140ms; }
+.rejilla-kpi.animar-entrada > :nth-child(4) { animation-delay: 210ms; }
+.rejilla-kpi.animar-entrada > :nth-child(5) { animation-delay: 280ms; }
+
+.alerta--accionable { transition: transform 200ms ease, box-shadow 200ms ease; }
+.alerta--accionable:hover { transform: translateX(4px); }
+
+/* 6. Graficas -------------------------------------------------------------- */
+
+/* Linea: se "dibuja" de izquierda a derecha (pathLength="1" en graficas.js). */
+.grafica__linea {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: dibujar 1.4s cubic-bezier(0.65, 0, 0.35, 1) 200ms forwards;
+}
+.grafica__area { animation: subir-area 1.1s cubic-bezier(0.22, 1, 0.36, 1) 500ms both; transform-origin: bottom; transform-box: fill-box; }
+.grafica__punto {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: aparecer-punto 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(600ms + var(--i, 0) * 90ms);
+    transition: r 160ms ease;
+}
+.grafica__punto:hover { r: 6; }
+.grafica__barra {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: crecer-barra 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+    transition: opacity 160ms ease;
+}
+.grafica:hover .grafica__barra { opacity: 0.55; }
+.grafica .grafica__barra:hover { opacity: 1; }
+.barra-progreso__relleno {
+    animation: llenar 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(150ms + var(--i, 0) * 80ms);
+}
+.anillo__segmento { transition: stroke-width 200ms ease; cursor: default; }
+.anillo__segmento:hover { stroke-width: 24; }
+.anillo__centro-valor, .anillo__centro-texto { animation: desvanecer 600ms ease 700ms both; }
+.leyenda__item { animation: aparecer-fila 400ms ease both; }
+.leyenda__item:nth-child(2) { animation-delay: 80ms; }
+.leyenda__item:nth-child(3) { animation-delay: 160ms; }
+.leyenda__item:nth-child(4) { animation-delay: 240ms; }
+.leyenda__item:nth-child(n+5) { animation-delay: 320ms; }
+
+/* 7. Tablas, menu y usuario ------------------------------------------------ */
+
+.tabla tbody tr { animation: aparecer-fila 360ms ease both; transition: background var(--transicion); }
+.tabla tbody tr:nth-child(2) { animation-delay: 30ms; }
+.tabla tbody tr:nth-child(3) { animation-delay: 60ms; }
+.tabla tbody tr:nth-child(4) { animation-delay: 90ms; }
+.tabla tbody tr:nth-child(5) { animation-delay: 120ms; }
+.tabla tbody tr:nth-child(6) { animation-delay: 150ms; }
+.tabla tbody tr:nth-child(n+7) { animation-delay: 180ms; }
+
+.enlace-navegacion svg { transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+.enlace-navegacion:hover svg { transform: translateX(2px) scale(1.08); }
+.enlace-navegacion[aria-current="page"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primario) 25%, transparent); }
+.enlace-navegacion[aria-current="page"]::before { animation: crecer-indicador 300ms ease both; }
+.enlace-navegacion__contador { animation: latido-suave 2s ease-in-out infinite; }
+
+.lateral__marca svg { transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+.lateral__marca:hover svg { transform: rotate(-8deg) scale(1.06); }
+
+.usuario--pie { margin-top: var(--e2); padding: var(--e2); border: 1px solid var(--borde); background: var(--superficie-suave); }
+.usuario--pie .boton-icono { width: 32px; height: 32px; }
+.usuario--pie .boton-icono:hover { color: var(--negativo); background: var(--negativo-fondo); }
+
+.boton { transition: background var(--transicion), color var(--transicion), border-color var(--transicion),
+                     transform 160ms ease, box-shadow 200ms ease; }
+.boton--primario:hover:not(:disabled) { box-shadow: 0 8px 20px -10px var(--primario); }
+
+.modal__caja { box-shadow: var(--sombra-l), 0 0 0 1px color-mix(in srgb, var(--borde-fuerte) 60%, transparent); }
+
+@media (max-width: 640px) {
+    .saludo { flex-direction: column; align-items: flex-start; padding: var(--e4); }
+    .tarjeta-vidrio { padding: var(--e5) var(--e4); }
+}
+
+/* 8. Keyframes ------------------------------------------------------------- */
+
+@keyframes deslizar-degradado { to { background-position: -250% 0; } }
+@keyframes flotar {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(6vmax, 4vmax) scale(1.08); }
+    100% { transform: translate(-4vmax, 8vmax) scale(0.95); }
+}
+@keyframes latido { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 185, 59, 0.5); }
+                    50% { transform: scale(0.92); box-shadow: 0 0 0 18px rgba(245, 185, 59, 0); } }
+@keyframes latido-verde { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--positivo) 70%, transparent); }
+                          100% { box-shadow: 0 0 0 10px transparent; } }
+@keyframes latido-suave { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes sacudir {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-7px); }
+    40%, 60% { transform: translateX(7px); }
+}
+@keyframes salir-acceso { to { opacity: 0; transform: translateY(-12px) scale(0.97); filter: blur(4px); } }
+@keyframes titilar { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.85; } }
+@keyframes avanzar-calle { to { stroke-dashoffset: -48; } }
+@keyframes recorrer { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes onda { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(3.2); opacity: 0; } }
+@keyframes entrar-izquierda { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+@keyframes entrar-vista { from { opacity: 0; } to { opacity: 1; } }
+@keyframes avanzar-reticula { to { background-position: 32px 32px; } }
+@keyframes aparecer-kpi {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes dibujar { to { stroke-dashoffset: 0; } }
+@keyframes subir-area { from { opacity: 0; transform: scaleY(0.4); } to { opacity: 1; transform: none; } }
+@keyframes aparecer-punto { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes crecer-barra { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes llenar { from { width: 0; } }
+@keyframes crecer-indicador { from { transform: scaleY(0); } to { transform: scaleY(1); } }

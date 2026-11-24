@@ -1,0 +1,40 @@
+# Despliegue en una sola maquina (EC2 o tu PC): MongoDB + SmartFlet.
+#
+#   docker compose up -d --build     # construir y arrancar
+#   docker compose logs -f app       # ver el log del backend
+#   docker compose down              # apagar (los datos de Mongo se conservan en el volumen)
+#
+# Variables: se leen del archivo .env que esta junto a este archivo (ver .env.example).
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # Limita la cache de Mongo para que quepa junto a Java en una instancia de 1-2 GB.
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo-datos:/data/db
+    # Sin "ports": Mongo NO queda expuesto a internet, solo lo ve el contenedor "app".
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # Si .env no define MONGODB_URI, usa el Mongo del contenedor de arriba.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/smartflet}
+      JAVA_OPTS: "-Xmx384m -XX:+UseSerialGC"
+    ports:
+      # Puerto 80 de la maquina → 8080 del contenedor
+      - "80:8080"
+
+volumes:
+  mongo-datos:

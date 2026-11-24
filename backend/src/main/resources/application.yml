@@ -20,3 +20,26 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      # La sesion se cierra sola tras este tiempo sin actividad (HU-14).
+      timeout: ${SESION_MINUTOS:30}m
+      cookie:
+        # JavaScript no puede leer la cookie (protege contra robo por XSS).
+        http-only: true
+        # El navegador no envia la cookie desde otros sitios (protege contra CSRF).
+        same-site: strict
+        # true solo cuando el sitio se sirve por HTTPS (ej. detras de CloudFront).
+        secure: ${COOKIE_SEGURA:false}
+
+smartflet:
+  # Primer administrador: se crea al arrancar SOLO si todavia no existe ningun administrador.
+  # Si ADMIN_CLAVE esta vacia se genera una clave aleatoria y se escribe en el log.
+  admin:
+    usuario: ${ADMIN_USUARIO:admin}
+    nombre: ${ADMIN_NOMBRE:Administrador}
+    clave: ${ADMIN_CLAVE:}
+  # Intentos fallidos de login permitidos antes de bloquear ese usuario unos minutos.
+  login:
+    intentos-maximos: 5
+    minutos-bloqueo: 5

@@ -18,6 +18,9 @@ import * as vistaRutas from '../vistas/rutas.js';
 import * as vistaTarifas from '../vistas/tarifas.js';
 import * as vistaPagos from '../vistas/pagos.js';
 import * as vistaReportes from '../vistas/reportes.js';
+import * as vistaUsuarios from '../vistas/usuarios.js';
+import { animarContenido } from '../componentes/animaciones.js';
+import { sesion } from './sesion.js';
 
 /** Una entrada por pantalla. `api` indica el controlador del backend que usa. */
 const VISTAS = [
@@ -41,19 +44,26 @@ const VISTAS = [
       descripcion: 'Pagos generados al finalizar cada viaje · /api/pagos' },
     { ruta: 'reportes', titulo: 'Reportes', grupo: 'Cobro', icono: 'reporte', modulo: vistaReportes,
       descripcion: 'Viajes e ingresos por periodo, vehiculo y metodo de pago' },
+    // soloAdmin: el menu no la muestra a un operador (y el backend le responderia 403).
+    { ruta: 'usuarios', titulo: 'Usuarios', grupo: 'Administracion', icono: 'usuarios', modulo: vistaUsuarios,
+      soloAdmin: true, descripcion: 'Cuentas de acceso y roles · /api/usuarios' },
 ];
 
-const GRUPOS = ['Operacion', 'Flota', 'Clientes', 'Cobro'];
+const GRUPOS = ['Operacion', 'Flota', 'Clientes', 'Cobro', 'Administracion'];
+
+/** Vistas que el usuario con sesion puede abrir. */
+const vistasPermitidas = () => VISTAS.filter((v) => !v.soloAdmin || sesion.esAdministrador);
 
 let vistaActual = null;
 
 export function construirNavegacion() {
     const navegacion = $('#navegacion');
-    navegacion.innerHTML = GRUPOS.map((grupo) => `
+    const permitidas = vistasPermitidas();
+    navegacion.innerHTML = GRUPOS.filter((grupo) => permitidas.some((v) => v.grupo === grupo)).map((grupo) => `
         <div class="grupo-navegacion">
             <p class="grupo-navegacion__titulo">${esc(grupo)}</p>
             <div class="pila pila--compacta" style="gap:2px">
-                ${VISTAS.filter((v) => v.grupo === grupo).map((v) => `
+                ${permitidas.filter((v) => v.grupo === grupo).map((v) => `
                     <a class="enlace-navegacion" href="#/${v.ruta}" data-ruta="${v.ruta}">
                         ${icono(v.icono)}
                         <span>${esc(v.titulo)}</span>
@@ -65,7 +75,7 @@ export function construirNavegacion() {
 
 function vistaDesdeHash() {
     const ruta = location.hash.replace(/^#\/?/, '').split('?')[0];
-    return VISTAS.find((v) => v.ruta === ruta) || VISTAS[0];
+    return vistasPermitidas().find((v) => v.ruta === ruta) || VISTAS[0];
 }
 
 export async function renderizarVista(vista = vistaDesdeHash()) {
@@ -86,8 +96,14 @@ export async function renderizarVista(vista = vistaDesdeHash()) {
     contenido.innerHTML = '';
     window.scrollTo({ top: 0 });
 
+    // Transicion de entrada de la pantalla (estilos/movimiento.css → .vista-entrando)
+    contenido.classList.remove('vista-entrando');
+    void contenido.offsetWidth;
+    contenido.classList.add('vista-entrando');
+
     try {
         await vista.modulo.render(contenido, { acciones });
+        animarContenido(contenido);
     } catch (error) {
         contenido.innerHTML = `
             <div class="tarjeta"><div class="tarjeta__cuerpo">
