@@ -31,7 +31,8 @@ services:
     environment:
       # Si .env no define MONGODB_URI, usa el Mongo del contenedor de arriba.
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/smartflet}
-      JAVA_OPTS: "-Xmx384m -XX:+UseSerialGC"
+      # user.timezone: sin esto el contenedor usa UTC y las horas (y "ingresos de hoy") salen 5 h corridas.
+      JAVA_OPTS: "-Xmx384m -XX:+UseSerialGC -Duser.timezone=America/Bogota"
     ports:
       # Puerto 80 de la maquina → 8080 del contenedor
       - "80:8080"

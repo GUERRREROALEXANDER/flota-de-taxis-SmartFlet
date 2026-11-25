@@ -12,6 +12,13 @@ import { $, esc, icono } from '../componentes/ui.js';
 import { ErrorApi } from '../api/clienteHttp.js';
 import { iniciarSesion } from '../app/sesion.js';
 
+/**
+ * Cuenta de demostracion (rol OPERADOR). Es publica a proposito: la crea
+ * despliegue/cargar-datos-demo.ps1. Si no existe en el servidor, el login responde
+ * "usuario o contrasena incorrectos" como con cualquier otra cuenta.
+ */
+const CUENTA_DEMO = { usuario: 'demo', clave: 'demo2026' };
+
 const LOGO = `
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
         <rect width="48" height="48" rx="12" fill="#F5B93B"/>
@@ -124,6 +131,14 @@ export function mostrarAcceso(contenedor, motivo = '') {
                             <span>Entrar</span>${icono('salir')}
                         </button>
 
+                        <div class="acceso__demo">
+                            <p class="acceso__demo-titulo">¿Solo quieres conocer el sistema?</p>
+                            <button type="button" class="pastilla acceso__boton-demo" id="entrar-demo">
+                                <strong>${icono('reproducir')} Entrar con la cuenta demo</strong>
+                                <span>Usuario <code>${CUENTA_DEMO.usuario}</code> · clave <code>${CUENTA_DEMO.clave}</code> · rol operador, con datos de ejemplo</span>
+                            </button>
+                        </div>
+
                         <div class="acceso__pista">
                             ${icono('bombilla')}
                             <p><strong>¿Primer ingreso?</strong> Usa el administrador definido en el servidor
@@ -184,6 +199,13 @@ export function mostrarAcceso(contenedor, motivo = '') {
         };
 
         [usuario, clave].forEach((input) => input.addEventListener('input', () => marcarCampo(input, '')));
+
+        // Boton demo: llena el formulario y lo envia, igual que si el usuario lo escribiera.
+        $('#entrar-demo', contenedor).addEventListener('click', () => {
+            usuario.value = CUENTA_DEMO.usuario;
+            clave.value = CUENTA_DEMO.clave;
+            formulario.requestSubmit();
+        });
 
         formulario.addEventListener('submit', async (evento) => {
             evento.preventDefault();

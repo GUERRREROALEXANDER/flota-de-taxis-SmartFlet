@@ -138,6 +138,14 @@
     color: var(--texto);
 }
 
+/* Boton de la cuenta demo */
+.acceso__demo { margin-top: var(--e5); padding-top: var(--e4); }
+.acceso__boton-demo { width: 100%; cursor: pointer; border-style: dashed; }
+.acceso__boton-demo strong { display: flex; align-items: center; gap: 6px; color: var(--primario); font-family: var(--tipo-ui); }
+.acceso__boton-demo strong .icono { width: 14px; height: 14px; }
+.acceso__boton-demo code { font-family: var(--tipo-dato); color: var(--texto); }
+.acceso__boton-demo:hover { border-style: solid; box-shadow: 0 8px 20px -12px var(--primario); }
+
 /* Escena animada: ciudad, rutas y taxis */
 .escena { width: 100%; max-width: 30rem; margin: 0 0 var(--e5); overflow: visible; }
 .escena__edificios rect { fill: var(--superficie-alta); stroke: var(--borde-fuerte); stroke-width: 1; }
