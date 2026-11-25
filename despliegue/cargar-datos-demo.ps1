@@ -17,6 +17,8 @@ param(
     [string]$AdminClave
 )
 $ErrorActionPreference = 'Stop'
+# AWS CLI usa Python: sin esto falla al imprimir caracteres como → o ✓ en la consola de Windows.
+$env:PYTHONUTF8 = '1'
 $api = "$($Url.TrimEnd('/'))/api"
 if (-not $AdminClave) {
     $AdminClave = aws ssm get-parameter --name /smartflet/admin-clave --with-decryption --query Parameter.Value --output text

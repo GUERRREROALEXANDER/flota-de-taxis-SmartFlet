@@ -5,6 +5,8 @@
 #>
 param([string]$Rama = 'main')
 $ErrorActionPreference = 'Stop'
+# AWS CLI usa Python: sin esto falla al imprimir caracteres como → o ✓ en la consola de Windows.
+$env:PYTHONUTF8 = '1'
 
 $id = aws ec2 describe-instances --filters 'Name=tag:Name,Values=smartflet' 'Name=instance-state-name,Values=running' `
     --query 'Reservations[0].Instances[0].InstanceId' --output text
