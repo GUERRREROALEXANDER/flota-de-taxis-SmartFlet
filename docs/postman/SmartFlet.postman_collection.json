@@ -61,7 +61,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));"
                 ]
               }
             }
@@ -76,6 +76,230 @@
               ],
               "path": [
                 "vehiculos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "00b · Datos de ejemplo (buscar por ID)",
+      "description": "Usa los datos que DatosIniciales carga al arrancar con la base vacia: conductores 1-5, pasajeros 1-5, vehiculos 1-5, rutas 1-4, tarifa 1 y turnos 1-2. Toda respuesta exitosa trae { mensaje, datos }.",
+      "item": [
+        {
+          "name": "Listar conductores (todos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mensaje: Conductores encontrados\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Conductores encontrados\"));",
+                  "pm.test(\"datos es una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));",
+                  "pm.test(\"Los IDs son numeros\", () => pm.response.json().datos.forEach(c => pm.expect(c.id).to.be.a(\"number\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Devuelve todos los conductores con su ID, nombre y estado (ACTIVO / INACTIVO).",
+            "url": {
+              "raw": "{{baseUrl}}/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar conductor por ID 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mensaje: Conductor encontrado\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Conductor encontrado\"));",
+                  "pm.test(\"Es el conductor con ID 3\", () => pm.expect(pm.response.json().datos.id).to.eql(3));",
+                  "pm.test(\"Nombre: Jorge Ivan Benavides\", () => pm.expect(pm.response.json().datos.nombre).to.eql(\"Jorge Ivan Benavides\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Busca un registro concreto por su ID. Cambie el 3 por otro numero para ver otro conductor.",
+            "url": {
+              "raw": "{{baseUrl}}/conductores/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "3"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar conductor con ID que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Mensaje: Conductor con ID 99 no encontrado\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Conductor con ID 99 no encontrado\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Si el ID no existe, la API responde 404 con un mensaje que dice cual ID falto.",
+            "url": {
+              "raw": "{{baseUrl}}/conductores/99",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "99"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar conductores inactivos (enumerado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos estan INACTIVO\", () => pm.response.json().datos.forEach(c => pm.expect(c.estadoConductor).to.eql(\"INACTIVO\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "El estado es un enumerado: solo acepta ACTIVO o INACTIVO.",
+            "url": {
+              "raw": "{{baseUrl}}/conductores?estado=INACTIVO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "INACTIVO"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar con ID que no es numero → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: parametro id invalido\", () => pm.expect(pm.response.json().mensaje).to.include(\"'id'\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "El ID es numerico (Long): un texto no es valido.",
+            "url": {
+              "raw": "{{baseUrl}}/conductores/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores",
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar pasajero por ID 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es el pasajero con ID 1\", () => pm.expect(pm.response.json().datos.id).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Lo mismo con pasajeros: Ana Lucia Paz es el ID 1.",
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar vehiculo por ID 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Placa TAX102\", () => pm.expect(pm.response.json().datos.placa).to.eql(\"TAX102\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "El vehiculo 2 es el Hyundai Accent de placa TAX102.",
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "2"
               ]
             }
           }
@@ -130,7 +354,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Tiene valor base y valor por km\", () => pm.expect(pm.response.json()).to.include.keys(\"valorBase\",\"valorPorKm\"));"
+                  "pm.test(\"Tiene valor base y valor por km\", () => pm.expect(pm.response.json().datos).to.include.keys(\"valorBase\",\"valorPorKm\"));"
                 ]
               }
             }
@@ -159,7 +383,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));"
                 ]
               }
             }
@@ -187,8 +411,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"tarifaId\", pm.response.json().id);",
-                  "pm.test(\"estado = ACTIVO\", () => pm.expect(pm.response.json().estado).to.eql(\"ACTIVO\"));"
+                  "pm.collectionVariables.set(\"tarifaId\", pm.response.json().datos.id);",
+                  "pm.test(\"estado = ACTIVO\", () => pm.expect(pm.response.json().datos.estado).to.eql(\"ACTIVO\"));"
                 ]
               }
             }
@@ -302,7 +526,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"nombre = Futura editada\", () => pm.expect(pm.response.json().nombre).to.eql(\"Futura editada\"));"
+                  "pm.test(\"nombre = Futura editada\", () => pm.expect(pm.response.json().datos.nombre).to.eql(\"Futura editada\"));"
                 ]
               }
             }
@@ -340,7 +564,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estado = INACTIVO\", () => pm.expect(pm.response.json().estado).to.eql(\"INACTIVO\"));"
+                  "pm.test(\"estado = INACTIVO\", () => pm.expect(pm.response.json().datos.estado).to.eql(\"INACTIVO\"));"
                 ]
               }
             }
@@ -413,8 +637,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"vehiculoId\", pm.response.json().id);",
-                  "pm.test(\"estadoOperativo = true\", () => pm.expect(pm.response.json().estadoOperativo).to.eql(true));"
+                  "pm.collectionVariables.set(\"vehiculoId\", pm.response.json().datos.id);",
+                  "pm.test(\"estadoOperativo = true\", () => pm.expect(pm.response.json().datos.estadoOperativo).to.eql(true));"
                 ]
               }
             }
@@ -528,8 +752,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-                  "pm.test(\"Incluye el vehiculo creado\", () => pm.expect(pm.response.json().map(v => v.id)).to.include(pm.collectionVariables.get(\"vehiculoId\")));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));",
+                  "pm.test(\"Incluye el vehiculo creado\", () => pm.expect(pm.response.json().datos.map(v => v.id)).to.include(Number(pm.collectionVariables.get(\"vehiculoId\"))));"
                 ]
               }
             }
@@ -557,7 +781,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Todos estan operativos\", () => pm.response.json().forEach(v => pm.expect(v.estadoOperativo).to.be.true));"
+                  "pm.test(\"Todos estan operativos\", () => pm.response.json().datos.forEach(v => pm.expect(v.estadoOperativo).to.be.true));"
                 ]
               }
             }
@@ -591,7 +815,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"modelo = Kia Picanto\", () => pm.expect(pm.response.json().modelo).to.eql(\"Kia Picanto\"));"
+                  "pm.test(\"modelo = Kia Picanto\", () => pm.expect(pm.response.json().datos.modelo).to.eql(\"Kia Picanto\"));"
                 ]
               }
             }
@@ -629,13 +853,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/vehiculos/000000000000000000000000",
+              "raw": "{{baseUrl}}/vehiculos/999999",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "vehiculos",
-                "000000000000000000000000"
+                "999999"
               ]
             }
           }
@@ -649,7 +873,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"modelo = Kia Picanto 2025\", () => pm.expect(pm.response.json().modelo).to.eql(\"Kia Picanto 2025\"));"
+                  "pm.test(\"modelo = Kia Picanto 2025\", () => pm.expect(pm.response.json().datos.modelo).to.eql(\"Kia Picanto 2025\"));"
                 ]
               }
             }
@@ -687,7 +911,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"vehiculoBId\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"vehiculoBId\", pm.response.json().datos.id);"
                 ]
               }
             }
@@ -724,7 +948,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoOperativo = false\", () => pm.expect(pm.response.json().estadoOperativo).to.eql(false));"
+                  "pm.test(\"estadoOperativo = false\", () => pm.expect(pm.response.json().datos.estadoOperativo).to.eql(false));"
                 ]
               }
             }
@@ -768,8 +992,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"conductorId\", pm.response.json().id);",
-                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"ACTIVO\"));"
+                  "pm.collectionVariables.set(\"conductorId\", pm.response.json().datos.id);",
+                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().datos.estadoConductor).to.eql(\"ACTIVO\"));"
                 ]
               }
             }
@@ -883,8 +1107,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-                  "pm.test(\"Todos activos\", () => pm.response.json().forEach(c => pm.expect(c.estadoConductor).to.eql(\"ACTIVO\")));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));",
+                  "pm.test(\"Todos activos\", () => pm.response.json().datos.forEach(c => pm.expect(c.estadoConductor).to.eql(\"ACTIVO\")));"
                 ]
               }
             }
@@ -918,7 +1142,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"nombre = Conductor Postman Editado\", () => pm.expect(pm.response.json().nombre).to.eql(\"Conductor Postman Editado\"));"
+                  "pm.test(\"nombre = Conductor Postman Editado\", () => pm.expect(pm.response.json().datos.nombre).to.eql(\"Conductor Postman Editado\"));"
                 ]
               }
             }
@@ -956,7 +1180,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoConductor = INACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"INACTIVO\"));"
+                  "pm.test(\"estadoConductor = INACTIVO\", () => pm.expect(pm.response.json().datos.estadoConductor).to.eql(\"INACTIVO\"));"
                 ]
               }
             }
@@ -1032,7 +1256,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"ACTIVO\"));"
+                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().datos.estadoConductor).to.eql(\"ACTIVO\"));"
                 ]
               }
             }
@@ -1076,9 +1300,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"pasajeroId\", pm.response.json().id);",
-                  "pm.test(\"estadoCuenta = ACTIVO\", () => pm.expect(pm.response.json().estadoCuenta).to.eql(\"ACTIVO\"));",
-                  "pm.test(\"Fecha de registro = hoy\", () => pm.expect(pm.response.json().fechaRegistro).to.eql(pm.collectionVariables.get(\"hoy\")));"
+                  "pm.collectionVariables.set(\"pasajeroId\", pm.response.json().datos.id);",
+                  "pm.test(\"estadoCuenta = ACTIVO\", () => pm.expect(pm.response.json().datos.estadoCuenta).to.eql(\"ACTIVO\"));",
+                  "pm.test(\"Fecha de registro = hoy\", () => pm.expect(pm.response.json().datos.fechaRegistro).to.eql(pm.collectionVariables.get(\"hoy\")));"
                 ]
               }
             }
@@ -1189,7 +1413,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));"
                 ]
               }
             }
@@ -1217,7 +1441,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"telefono = 3209998877\", () => pm.expect(pm.response.json().telefono).to.eql(\"3209998877\"));"
+                  "pm.test(\"telefono = 3209998877\", () => pm.expect(pm.response.json().datos.telefono).to.eql(\"3209998877\"));"
                 ]
               }
             }
@@ -1260,7 +1484,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"rutaId\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"rutaId\", pm.response.json().datos.id);"
                 ]
               }
             }
@@ -1370,7 +1594,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Encuentra la ruta\", () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+                  "pm.test(\"Encuentra la ruta\", () => pm.expect(pm.response.json().datos.length).to.be.at.least(1));"
                 ]
               }
             }
@@ -1404,7 +1628,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"duracionEstimadaMinutos = 45\", () => pm.expect(pm.response.json().duracionEstimadaMinutos).to.eql(45));"
+                  "pm.test(\"duracionEstimadaMinutos = 45\", () => pm.expect(pm.response.json().datos.duracionEstimadaMinutos).to.eql(45));"
                 ]
               }
             }
@@ -1441,7 +1665,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mensaje: eliminad\", () => pm.expect(pm.response.json().mensaje).to.include(\"eliminad\"));"
                 ]
               }
             }
@@ -1503,8 +1728,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"turnoId\", pm.response.json().id);",
-                  "pm.test(\"estado = PROGRAMADO\", () => pm.expect(pm.response.json().estado).to.eql(\"PROGRAMADO\"));"
+                  "pm.collectionVariables.set(\"turnoId\", pm.response.json().datos.id);",
+                  "pm.test(\"estado = PROGRAMADO\", () => pm.expect(pm.response.json().datos.estado).to.eql(\"PROGRAMADO\"));"
                 ]
               }
             }
@@ -1682,7 +1907,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estado = EN_CURSO\", () => pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"));"
+                  "pm.test(\"estado = EN_CURSO\", () => pm.expect(pm.response.json().datos.estado).to.eql(\"EN_CURSO\"));"
                 ]
               }
             }
@@ -1742,7 +1967,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Solo turnos de ese conductor\", () => pm.response.json().forEach(t => pm.expect(t.conductorId).to.eql(pm.collectionVariables.get(\"conductorId\"))));"
+                  "pm.test(\"Solo turnos de ese conductor\", () => pm.response.json().datos.forEach(t => pm.expect(t.conductorId).to.eql(Number(pm.collectionVariables.get(\"conductorId\")))));"
                 ]
               }
             }
@@ -1781,11 +2006,11 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"viajeId\", pm.response.json().id);",
-                  "pm.test(\"estadoViaje = SOLICITADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"SOLICITADO\"));",
-                  "pm.test(\"Guarda copia de la tarifa vigente\", () => { const v = pm.response.json(); pm.expect(v.tarifaValorBase).to.be.a(\"number\"); pm.expect(v.tarifaValorPorKm).to.be.a(\"number\"); });",
-                  "pm.collectionVariables.set(\"valorBase\", pm.response.json().tarifaValorBase);",
-                  "pm.collectionVariables.set(\"valorPorKm\", pm.response.json().tarifaValorPorKm);"
+                  "pm.collectionVariables.set(\"viajeId\", pm.response.json().datos.id);",
+                  "pm.test(\"estadoViaje = SOLICITADO\", () => pm.expect(pm.response.json().datos.estadoViaje).to.eql(\"SOLICITADO\"));",
+                  "pm.test(\"Guarda copia de la tarifa vigente\", () => { const v = pm.response.json().datos; pm.expect(v.tarifaValorBase).to.be.a(\"number\"); pm.expect(v.tarifaValorPorKm).to.be.a(\"number\"); });",
+                  "pm.collectionVariables.set(\"valorBase\", pm.response.json().datos.tarifaValorBase);",
+                  "pm.collectionVariables.set(\"valorPorKm\", pm.response.json().datos.tarifaValorPorKm);"
                 ]
               }
             }
@@ -1964,8 +2189,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoViaje = ASIGNADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"ASIGNADO\"));",
-                  "pm.test(\"Queda con el vehiculo\", () => pm.expect(pm.response.json().vehiculoId).to.eql(pm.collectionVariables.get(\"vehiculoId\")));"
+                  "pm.test(\"estadoViaje = ASIGNADO\", () => pm.expect(pm.response.json().datos.estadoViaje).to.eql(\"ASIGNADO\"));",
+                  "pm.test(\"Queda con el vehiculo\", () => pm.expect(pm.response.json().datos.vehiculoId).to.eql(Number(pm.collectionVariables.get(\"vehiculoId\"))));"
                 ]
               }
             }
@@ -2004,8 +2229,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoViaje = EN_CURSO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"EN_CURSO\"));",
-                  "pm.test(\"Registra fecha de inicio\", () => pm.expect(pm.response.json().fechaInicio).to.be.a(\"string\"));"
+                  "pm.test(\"estadoViaje = EN_CURSO\", () => pm.expect(pm.response.json().datos.estadoViaje).to.eql(\"EN_CURSO\"));",
+                  "pm.test(\"Registra fecha de inicio\", () => pm.expect(pm.response.json().datos.fechaInicio).to.be.a(\"string\"));"
                 ]
               }
             }
@@ -2144,8 +2369,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoViaje = FINALIZADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"FINALIZADO\"));",
-                  "const v = pm.response.json();",
+                  "pm.test(\"estadoViaje = FINALIZADO\", () => pm.expect(pm.response.json().datos.estadoViaje).to.eql(\"FINALIZADO\"));",
+                  "const v = pm.response.json().datos;",
                   "pm.test(\"Crea el pago (Viaje es Creador de Pago)\", () => { pm.expect(v.pago).to.be.an(\"object\"); pm.expect(v.pago.estadoPago).to.eql(\"PAGADO\"); });",
                   "pm.test(\"Monto = valor base + valor por km x 12,5 km\", () => { const esperado = Number(pm.collectionVariables.get(\"valorBase\")) + Number(pm.collectionVariables.get(\"valorPorKm\")) * 12.5; pm.expect(Number(v.pago.monto)).to.be.closeTo(esperado, 1); });",
                   "pm.collectionVariables.set(\"pagoId\", v.pago.id);"
@@ -2187,7 +2412,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Todos finalizados\", () => pm.response.json().forEach(v => pm.expect(v.estadoViaje).to.eql(\"FINALIZADO\")));"
+                  "pm.test(\"Todos finalizados\", () => pm.response.json().datos.forEach(v => pm.expect(v.estadoViaje).to.eql(\"FINALIZADO\")));"
                 ]
               }
             }
@@ -2221,7 +2446,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Tiene 1 viaje\", () => pm.expect(pm.response.json().length).to.eql(1));"
+                  "pm.test(\"Tiene 1 viaje\", () => pm.expect(pm.response.json().datos.length).to.eql(1));"
                 ]
               }
             }
@@ -2255,7 +2480,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"viaje2Id\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"viaje2Id\", pm.response.json().datos.id);"
                 ]
               }
             }
@@ -2292,7 +2517,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoViaje = CANCELADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"CANCELADO\"));"
+                  "pm.test(\"estadoViaje = CANCELADO\", () => pm.expect(pm.response.json().datos.estadoViaje).to.eql(\"CANCELADO\"));"
                 ]
               }
             }
@@ -2365,8 +2590,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
-                  "pm.test(\"Incluye el pago del viaje\", () => pm.expect(pm.response.json().map(p => p.id)).to.include(pm.collectionVariables.get(\"pagoId\")));"
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json().datos).to.be.an(\"array\"));",
+                  "pm.test(\"Incluye el pago del viaje\", () => pm.expect(pm.response.json().datos.map(p => p.id)).to.include(Number(pm.collectionVariables.get(\"pagoId\"))));"
                 ]
               }
             }
@@ -2394,8 +2619,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"metodoPago = TARJETA\", () => pm.expect(pm.response.json().metodoPago).to.eql(\"TARJETA\"));",
-                  "pm.test(\"Apunta a su viaje\", () => pm.expect(pm.response.json().viajeId).to.eql(pm.collectionVariables.get(\"viajeId\")));"
+                  "pm.test(\"metodoPago = TARJETA\", () => pm.expect(pm.response.json().datos.metodoPago).to.eql(\"TARJETA\"));",
+                  "pm.test(\"Apunta a su viaje\", () => pm.expect(pm.response.json().datos.viajeId).to.eql(Number(pm.collectionVariables.get(\"viajeId\"))));"
                 ]
               }
             }
@@ -2424,7 +2649,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estadoPago = ANULADO\", () => pm.expect(pm.response.json().estadoPago).to.eql(\"ANULADO\"));"
+                  "pm.test(\"estadoPago = ANULADO\", () => pm.expect(pm.response.json().datos.estadoPago).to.eql(\"ANULADO\"));"
                 ]
               }
             }
@@ -2489,7 +2714,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"estado = FINALIZADO\", () => pm.expect(pm.response.json().estado).to.eql(\"FINALIZADO\"));"
+                  "pm.test(\"estado = FINALIZADO\", () => pm.expect(pm.response.json().datos.estado).to.eql(\"FINALIZADO\"));"
                 ]
               }
             }
@@ -2547,7 +2772,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mensaje: eliminad\", () => pm.expect(pm.response.json().mensaje).to.include(\"eliminad\"));"
                 ]
               }
             }

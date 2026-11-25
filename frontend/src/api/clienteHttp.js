@@ -5,6 +5,7 @@
  * metodos get, post, put, patch y delete. Las vistas nunca usan `fetch` directamente;
  * llaman a los modulos de `src/api/` (vehiculosApi, viajesApi...) y estos a este cliente.
  *
+ * Las respuestas exitosas llegan como `RespuestaApi` `{ mensaje, datos }` y se devuelve solo `datos`.
  * Los errores del backend llegan siempre con la forma de `ErrorRespuesta`
  * `{ estado, mensaje, errores, fecha }`. Aqui se convierten en un `ErrorApi`, asi un
  * formulario puede pintar el mensaje debajo del campo exacto que fallo.
@@ -89,7 +90,9 @@ export class ClienteHttp {
                 campos: datos?.errores,
             });
         }
-        return datos;
+        // Las respuestas exitosas llegan como { mensaje, datos } (RespuestaApi del backend).
+        // Las vistas solo necesitan el registro o la lista, asi que aqui se saca "datos".
+        return datos && typeof datos === 'object' && 'datos' in datos ? datos.datos : datos;
     }
 }
 
