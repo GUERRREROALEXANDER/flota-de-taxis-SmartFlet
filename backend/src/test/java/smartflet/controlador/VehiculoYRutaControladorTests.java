@@ -55,7 +55,7 @@ class VehiculoYRutaControladorTests {
         mockMvc.perform(post("/api/vehiculos").contentType(MediaType.APPLICATION_JSON).content(VEHICULO_VALIDO))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.placa").value("ABC123"));
+                .andExpect(jsonPath("$.datos.placa").value("ABC123"));
     }
 
     @Test
@@ -85,7 +85,7 @@ class VehiculoYRutaControladorTests {
     void vehiculoInexistenteDevuelve404() throws Exception {
         mockMvc.perform(get("/api/vehiculos/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.mensaje").value("Vehiculo con id 999 no existe"));
+                .andExpect(jsonPath("$.mensaje").value("Vehiculo con ID 999 no encontrado"));
 
         mockMvc.perform(delete("/api/vehiculos/999")).andExpect(status().isNotFound());
     }
@@ -95,18 +95,18 @@ class VehiculoYRutaControladorTests {
         String creado = mockMvc.perform(post("/api/vehiculos")
                         .contentType(MediaType.APPLICATION_JSON).content(VEHICULO_VALIDO))
                 .andReturn().getResponse().getContentAsString();
-        String id = creado.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+        Long id = Long.parseLong(creado.replaceAll(".*\"id\":(\\d+).*", "$1"));
 
         mockMvc.perform(patch("/api/vehiculos/" + id + "/estado")
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estadoOperativo\": false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estadoOperativo").value(false));
+                .andExpect(jsonPath("$.datos.estadoOperativo").value(false));
 
         mockMvc.perform(get("/api/vehiculos").param("estadoOperativo", "false"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.datos", hasSize(1)));
 
-        mockMvc.perform(delete("/api/vehiculos/" + id)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/vehiculos/" + id)).andExpect(status().isOk());
     }
 
     @Test
@@ -115,19 +115,19 @@ class VehiculoYRutaControladorTests {
                         .contentType(MediaType.APPLICATION_JSON).content(RUTA_VALIDA))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        String id = creada.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+        Long id = Long.parseLong(creada.replaceAll(".*\"id\":(\\d+).*", "$1"));
 
         mockMvc.perform(get("/api/rutas").param("origen", "term"))
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.datos", hasSize(1)));
 
         String actualizada = """
                 {"origen": "Terminal", "destino": "Centro", "distanciaKm": 5.0, "duracionEstimadaMinutos": 15}
                 """;
         mockMvc.perform(put("/api/rutas/" + id).contentType(MediaType.APPLICATION_JSON).content(actualizada))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.destino").value("Centro"));
+                .andExpect(jsonPath("$.datos.destino").value("Centro"));
 
-        mockMvc.perform(delete("/api/rutas/" + id)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/rutas/" + id)).andExpect(status().isOk());
         mockMvc.perform(get("/api/rutas/" + id)).andExpect(status().isNotFound());
     }
 
@@ -143,8 +143,8 @@ class VehiculoYRutaControladorTests {
     }
 
     @Test
-    void idInexistenteDevuelve404YJsonMalFormadoDevuelve400() throws Exception {
-        mockMvc.perform(get("/api/rutas/abc")).andExpect(status().isNotFound());
+    void idNoNumericoYJsonMalFormadoDevuelven400() throws Exception {
+        mockMvc.perform(get("/api/rutas/abc")).andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/rutas").contentType(MediaType.APPLICATION_JSON).content("{origen:"))
                 .andExpect(status().isBadRequest());

@@ -30,7 +30,7 @@ public class PasajeroServicio {
                 .toList();
     }
 
-    public PasajeroRespuesta buscarPorId(String id) {
+    public PasajeroRespuesta buscarPorId(Long id) {
         return PasajeroRespuesta.desde(obtenerPasajero(id));
     }
 
@@ -44,7 +44,7 @@ public class PasajeroServicio {
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    public PasajeroRespuesta modificarDatos(String id, PasajeroSolicitud solicitud) {
+    public PasajeroRespuesta modificarDatos(Long id, PasajeroSolicitud solicitud) {
         Pasajero pasajero = obtenerPasajero(id);
         String identificacion = solicitud.identificacion().trim();
         if (pasajeroRepositorio.existsByIdentificacionAndIdNot(identificacion, id)) {
@@ -57,13 +57,13 @@ public class PasajeroServicio {
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    public PasajeroRespuesta cambiarEstado(String id, EstadoRegistro estado) {
+    public PasajeroRespuesta cambiarEstado(Long id, EstadoRegistro estado) {
         Pasajero pasajero = obtenerPasajero(id);
         pasajero.setEstadoCuenta(estado);
         return PasajeroRespuesta.desde(pasajeroRepositorio.save(pasajero));
     }
 
-    private Pasajero obtenerPasajero(String id) {
+    private Pasajero obtenerPasajero(Long id) {
         return pasajeroRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pasajero", id));
     }

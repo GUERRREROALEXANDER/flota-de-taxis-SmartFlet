@@ -23,7 +23,8 @@ public class TarifaServicio {
     /** Se usa como "sin fecha de fin" al comparar vigencias. */
     private static final LocalDate SIN_FIN = LocalDate.of(9999, 12, 31);
     /** Al crear no hay tarifa que excluir de la comparacion. */
-    private static final String NINGUNA = "";
+    /** Al crear no hay tarifa que excluir: ningun registro tiene ID 0. */
+    private static final Long NINGUNA = 0L;
 
     private final TarifaRepositorio tarifaRepositorio;
 
@@ -37,7 +38,7 @@ public class TarifaServicio {
                 .toList();
     }
 
-    public TarifaRespuesta buscarPorId(String id) {
+    public TarifaRespuesta buscarPorId(Long id) {
         return TarifaRespuesta.desde(obtenerTarifa(id));
     }
 
@@ -56,7 +57,7 @@ public class TarifaServicio {
     }
 
     /** Los viajes ya cobrados no cambian: el monto quedo guardado en su Pago. */
-    public TarifaRespuesta modificar(String id, TarifaSolicitud solicitud) {
+    public TarifaRespuesta modificar(Long id, TarifaSolicitud solicitud) {
         Tarifa tarifa = obtenerTarifa(id);
         if (tarifa.getEstado() == EstadoRegistro.INACTIVO) {
             throw new ReglaNegocioException("No se puede modificar una tarifa desactivada");
@@ -70,18 +71,18 @@ public class TarifaServicio {
         return TarifaRespuesta.desde(tarifaRepositorio.save(tarifa));
     }
 
-    public TarifaRespuesta desactivar(String id) {
+    public TarifaRespuesta desactivar(Long id) {
         Tarifa tarifa = obtenerTarifa(id);
         tarifa.desactivarTarifa();
         return TarifaRespuesta.desde(tarifaRepositorio.save(tarifa));
     }
 
-    private Tarifa obtenerTarifa(String id) {
+    private Tarifa obtenerTarifa(Long id) {
         return tarifaRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tarifa", id));
     }
 
-    private void validarVigencia(TarifaSolicitud solicitud, String idExcluido) {
+    private void validarVigencia(TarifaSolicitud solicitud, Long idExcluido) {
         LocalDate inicio = solicitud.fechaInicioVigencia();
         LocalDate fin = solicitud.fechaFinVigencia() == null ? SIN_FIN : solicitud.fechaFinVigencia();
         if (fin.isBefore(inicio)) {

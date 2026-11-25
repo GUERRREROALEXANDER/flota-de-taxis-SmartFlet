@@ -10,10 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Persona habilitada (licencia vigente) para operar un vehiculo de la flota durante sus turnos.
  */
 @Document(collection = "conductores")
-public class Conductor {
+public class Conductor implements EntidadConId {
 
     @Id
-    private String id;
+    private Long id;
 
     @Indexed(unique = true)
     private String identificacion;
@@ -49,8 +49,14 @@ public class Conductor {
         return estadoConductor == EstadoRegistro.ACTIVO;
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getIdentificacion() {

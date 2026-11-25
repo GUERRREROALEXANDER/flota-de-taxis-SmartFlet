@@ -38,7 +38,7 @@ public class ConductorServicio {
                 .toList();
     }
 
-    public ConductorRespuesta buscarPorId(String id) {
+    public ConductorRespuesta buscarPorId(Long id) {
         return ConductorRespuesta.desde(obtenerConductor(id));
     }
 
@@ -59,7 +59,7 @@ public class ConductorServicio {
         return ConductorRespuesta.desde(conductorRepositorio.save(conductor));
     }
 
-    public ConductorRespuesta actualizar(String id, ConductorSolicitud solicitud) {
+    public ConductorRespuesta actualizar(Long id, ConductorSolicitud solicitud) {
         Conductor conductor = obtenerConductor(id);
         String identificacion = solicitud.identificacion().trim();
         String licencia = normalizarLicencia(solicitud.numeroLicencia());
@@ -80,13 +80,13 @@ public class ConductorServicio {
     }
 
     /** actualizarEstado() del diagrama de clases: activar o desactivar sin borrar el historial. */
-    public ConductorRespuesta cambiarEstado(String id, EstadoRegistro estado) {
+    public ConductorRespuesta cambiarEstado(Long id, EstadoRegistro estado) {
         Conductor conductor = obtenerConductor(id);
         conductor.setEstadoConductor(estado);
         return ConductorRespuesta.desde(conductorRepositorio.save(conductor));
     }
 
-    private Conductor obtenerConductor(String id) {
+    private Conductor obtenerConductor(Long id) {
         return conductorRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Conductor", id));
     }

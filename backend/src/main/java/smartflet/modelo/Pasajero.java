@@ -10,10 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Persona que solicita viajes y los paga. Se desactiva en vez de borrarse para conservar su historial.
  */
 @Document(collection = "pasajeros")
-public class Pasajero {
+public class Pasajero implements EntidadConId {
 
     @Id
-    private String id;
+    private Long id;
 
     @Indexed(unique = true)
     private String identificacion;
@@ -46,8 +46,14 @@ public class Pasajero {
         return estadoCuenta == EstadoRegistro.ACTIVO;
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getIdentificacion() {

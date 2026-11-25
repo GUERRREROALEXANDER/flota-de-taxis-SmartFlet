@@ -11,10 +11,10 @@ import smartflet.modelo.Viaje;
  * tarifaValorBase y tarifaValorPorKm son los valores fijados al solicitar el viaje.
  */
 public record ViajeRespuesta(
-        String id,
-        String pasajeroId,
-        String vehiculoId,
-        String tarifaId,
+        Long id,
+        Long pasajeroId,
+        Long vehiculoId,
+        Long tarifaId,
         BigDecimal tarifaValorBase,
         BigDecimal tarifaValorPorKm,
         String origen,

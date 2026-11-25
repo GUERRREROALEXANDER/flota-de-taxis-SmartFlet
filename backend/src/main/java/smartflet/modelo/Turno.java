@@ -13,16 +13,16 @@ import smartflet.excepcion.ReglaNegocioException;
  * Conductor y vehiculo se guardan como referencias por id (documentos independientes en MongoDB).
  */
 @Document(collection = "turnos")
-public class Turno {
+public class Turno implements EntidadConId {
 
     @Id
-    private String id;
+    private Long id;
 
     @Indexed
-    private String conductorId;
+    private Long conductorId;
 
     @Indexed
-    private String vehiculoId;
+    private Long vehiculoId;
 
     private LocalDateTime fechaInicio;
 
@@ -35,7 +35,7 @@ public class Turno {
     }
 
     /** Un turno nuevo queda PROGRAMADO. */
-    public Turno(String conductorId, String vehiculoId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+    public Turno(Long conductorId, Long vehiculoId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         this.conductorId = conductorId;
         this.vehiculoId = vehiculoId;
         this.fechaInicio = fechaInicio;
@@ -57,15 +57,21 @@ public class Turno {
         this.estado = EstadoTurno.FINALIZADO;
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
     }
 
-    public String getConductorId() {
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getConductorId() {
         return conductorId;
     }
 
-    public String getVehiculoId() {
+    public Long getVehiculoId() {
         return vehiculoId;
     }
 

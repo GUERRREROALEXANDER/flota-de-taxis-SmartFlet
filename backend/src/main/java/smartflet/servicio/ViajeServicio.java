@@ -62,13 +62,13 @@ public class ViajeServicio {
     }
 
     /** consultarHistorial() del pasajero. */
-    public List<ViajeRespuesta> listarPorPasajero(String pasajeroId) {
+    public List<ViajeRespuesta> listarPorPasajero(Long pasajeroId) {
         return viajeRepositorio.findByPasajeroIdOrderByFechaSolicitudDesc(pasajeroId).stream()
                 .map(ViajeRespuesta::desde)
                 .toList();
     }
 
-    public ViajeRespuesta buscarPorId(String id) {
+    public ViajeRespuesta buscarPorId(Long id) {
         return ViajeRespuesta.desde(obtenerViaje(id));
     }
 
@@ -92,7 +92,7 @@ public class ViajeServicio {
     }
 
     /** Solo vehiculos operativos, con un turno EN_CURSO y sin otro viaje activo. */
-    public ViajeRespuesta asignarVehiculo(String id, String vehiculoId) {
+    public ViajeRespuesta asignarVehiculo(Long id, Long vehiculoId) {
         Viaje viaje = obtenerViaje(id);
         Vehiculo vehiculo = vehiculoRepositorio.findById(vehiculoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Vehiculo", vehiculoId));
@@ -111,26 +111,26 @@ public class ViajeServicio {
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    public ViajeRespuesta iniciar(String id) {
+    public ViajeRespuesta iniciar(Long id) {
         Viaje viaje = obtenerViaje(id);
         viaje.iniciarViaje();
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
     /** Finaliza el viaje; el Pago queda embebido en el mismo documento (una sola escritura atomica). */
-    public ViajeRespuesta finalizar(String id, FinalizacionViajeSolicitud solicitud) {
+    public ViajeRespuesta finalizar(Long id, FinalizacionViajeSolicitud solicitud) {
         Viaje viaje = obtenerViaje(id);
         viaje.finalizarViaje(solicitud.distanciaKm(), solicitud.metodoPago());
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    public ViajeRespuesta cancelar(String id) {
+    public ViajeRespuesta cancelar(Long id) {
         Viaje viaje = obtenerViaje(id);
         viaje.cancelarViaje();
         return ViajeRespuesta.desde(viajeRepositorio.save(viaje));
     }
 
-    private Viaje obtenerViaje(String id) {
+    private Viaje obtenerViaje(Long id) {
         return viajeRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Viaje", id));
     }

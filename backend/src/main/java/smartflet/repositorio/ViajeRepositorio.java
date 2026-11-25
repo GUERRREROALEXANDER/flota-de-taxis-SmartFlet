@@ -11,22 +11,22 @@ import smartflet.modelo.EstadoViaje;
 import smartflet.modelo.Viaje;
 
 @Repository
-public interface ViajeRepositorio extends MongoRepository<Viaje, String> {
+public interface ViajeRepositorio extends MongoRepository<Viaje, Long> {
 
     List<Viaje> findByEstadoViaje(EstadoViaje estadoViaje);
 
-    List<Viaje> findByPasajeroIdOrderByFechaSolicitudDesc(String pasajeroId);
+    List<Viaje> findByPasajeroIdOrderByFechaSolicitudDesc(Long pasajeroId);
 
-    boolean existsByVehiculoId(String vehiculoId);
+    boolean existsByVehiculoId(Long vehiculoId);
 
-    boolean existsByVehiculoIdAndEstadoViajeIn(String vehiculoId, Collection<EstadoViaje> estados);
+    boolean existsByVehiculoIdAndEstadoViajeIn(Long vehiculoId, Collection<EstadoViaje> estados);
 
     /** Para saber si el vehiculo ya atiende OTRO viaje activo. */
-    boolean existsByVehiculoIdAndEstadoViajeInAndIdNot(String vehiculoId, Collection<EstadoViaje> estados, String id);
+    boolean existsByVehiculoIdAndEstadoViajeInAndIdNot(Long vehiculoId, Collection<EstadoViaje> estados, Long id);
 
     /** Viajes que ya tienen pago (el pago vive embebido en el viaje). */
     List<Viaje> findByPagoIsNotNull();
 
     /** El viaje que contiene el pago con ese id. */
-    Optional<Viaje> findByPagoId(String pagoId);
+    Optional<Viaje> findByPagoId(Long pagoId);
 }

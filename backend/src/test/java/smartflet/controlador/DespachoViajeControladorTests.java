@@ -62,25 +62,25 @@ class DespachoViajeControladorTests {
     @Test
     void viajeCompletoGeneraPagoConLaTarifaVigente() throws Exception {
         crearTarifa();
-        String pasajeroId = crearPasajero();
-        String viajeId = viajeEnCurso(pasajeroId);
+        Long pasajeroId = crearPasajero();
+        Long viajeId = viajeEnCurso(pasajeroId);
 
         // 4000 + 1500 * 10 = 19000.00
         enviar(patch("/api/viajes/" + viajeId + "/finalizar"), "{\"distanciaKm\": 10, \"metodoPago\": \"EFECTIVO\"}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estadoViaje").value("FINALIZADO"))
-                .andExpect(jsonPath("$.pago.monto").value(19000.00))
-                .andExpect(jsonPath("$.pago.estadoPago").value("PAGADO"))
-                .andExpect(jsonPath("$.pago.viajeId").value(viajeId));
+                .andExpect(jsonPath("$.datos.estadoViaje").value("FINALIZADO"))
+                .andExpect(jsonPath("$.datos.pago.monto").value(19000.00))
+                .andExpect(jsonPath("$.datos.pago.estadoPago").value("PAGADO"))
+                .andExpect(jsonPath("$.datos.pago.viajeId").value(viajeId));
 
-        mockMvc.perform(get("/api/viajes").param("pasajeroId", pasajeroId))
-                .andExpect(jsonPath("$[0].id").value(viajeId));
+        mockMvc.perform(get("/api/viajes").param("pasajeroId", String.valueOf(pasajeroId)))
+                .andExpect(jsonPath("$.datos[0].id").value(viajeId));
     }
 
     @Test
     void elPrecioUsaLaTarifaFijadaAlSolicitarAunqueLaTarifaCambie() throws Exception {
-        String tarifaId = crearTarifa();
-        String viajeId = viajeEnCurso(crearPasajero());
+        Long tarifaId = crearTarifa();
+        Long viajeId = viajeEnCurso(crearPasajero());
 
         String tarifaCara = """
                 {"nombre": "Diurna", "valorBase": 9000, "valorPorKm": 9000, "fechaInicioVigencia": "%s"}
@@ -88,35 +88,35 @@ class DespachoViajeControladorTests {
         enviar(put("/api/tarifas/" + tarifaId), tarifaCara).andExpect(status().isOk());
 
         enviar(patch("/api/viajes/" + viajeId + "/finalizar"), "{\"distanciaKm\": 10, \"metodoPago\": \"TARJETA\"}")
-                .andExpect(jsonPath("$.pago.monto").value(19000.00));
+                .andExpect(jsonPath("$.datos.pago.monto").value(19000.00));
     }
 
     @Test
     void elPagoSeConsultaYSeAnulaPorSuId() throws Exception {
         crearTarifa();
-        String viajeId = viajeEnCurso(crearPasajero());
+        Long viajeId = viajeEnCurso(crearPasajero());
         String cuerpo = enviar(patch("/api/viajes/" + viajeId + "/finalizar"),
                         "{\"distanciaKm\": 2, \"metodoPago\": \"TRANSFERENCIA\"}")
                 .andReturn().getResponse().getContentAsString();
-        String pagoId = json.readTree(cuerpo).get("pago").get("id").asText();
+        Long pagoId = json.readTree(cuerpo).get("datos").get("pago").get("id").asLong();
 
         mockMvc.perform(get("/api/pagos/" + pagoId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.viajeId").value(viajeId));
+                .andExpect(jsonPath("$.datos.viajeId").value(viajeId));
         mockMvc.perform(patch("/api/pagos/" + pagoId + "/anular"))
-                .andExpect(jsonPath("$.estadoPago").value("ANULADO"));
+                .andExpect(jsonPath("$.datos.estadoPago").value("ANULADO"));
         mockMvc.perform(patch("/api/pagos/" + pagoId + "/anular"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(get("/api/pagos/no-existe")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/pagos/999")).andExpect(status().isNotFound());
     }
 
     @Test
     void noSeAsignaUnVehiculoSinTurnoEnCurso() throws Exception {
         crearTarifa();
-        String viajeId = solicitarViaje(crearPasajero());
-        String vehiculoId = crearVehiculo();
+        Long viajeId = solicitarViaje(crearPasajero());
+        Long vehiculoId = crearVehiculo();
 
-        enviar(patch("/api/viajes/" + viajeId + "/asignar"), "{\"vehiculoId\": \"" + vehiculoId + "\"}")
+        enviar(patch("/api/viajes/" + viajeId + "/asignar"), "{\"vehiculoId\": " + vehiculoId + "}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensaje").value("El vehiculo TAX101 no tiene un turno en curso"));
     }
@@ -124,7 +124,7 @@ class DespachoViajeControladorTests {
     @Test
     void noSeFinalizaUnViajeQueNoHaIniciado() throws Exception {
         crearTarifa();
-        String viajeId = solicitarViaje(crearPasajero());
+        Long viajeId = solicitarViaje(crearPasajero());
 
         enviar(patch("/api/viajes/" + viajeId + "/finalizar"), "{\"distanciaKm\": 5, \"metodoPago\": \"TARJETA\"}")
                 .andExpect(status().isBadRequest());
@@ -132,7 +132,7 @@ class DespachoViajeControladorTests {
 
     @Test
     void sinTarifaVigenteNoSePuedeSolicitarViaje() throws Exception {
-        String pasajeroId = crearPasajero();
+        Long pasajeroId = crearPasajero();
 
         enviar(post("/api/viajes"), viajeJson(pasajeroId))
                 .andExpect(status().isBadRequest())
@@ -160,18 +160,18 @@ class DespachoViajeControladorTests {
 
     @Test
     void noSeCreanDosTarifasActivasQueSeCruzanPeroUnaTarifaSePuedeModificar() throws Exception {
-        String tarifaId = crearTarifa();
+        Long tarifaId = crearTarifa();
         enviar(post("/api/tarifas"), tarifaJson()).andExpect(status().isConflict());
 
         // Modificarse a si misma no cuenta como cruce.
         enviar(put("/api/tarifas/" + tarifaId), tarifaJson()).andExpect(status().isOk());
-        mockMvc.perform(get("/api/tarifas/vigente")).andExpect(jsonPath("$.id").value(tarifaId));
+        mockMvc.perform(get("/api/tarifas/vigente")).andExpect(jsonPath("$.datos.id").value(tarifaId));
     }
 
     @Test
     void turnosQueSeCruzanDevuelven409() throws Exception {
-        String vehiculoId = crearVehiculo();
-        String conductorId = crearConductor();
+        Long vehiculoId = crearVehiculo();
+        Long conductorId = crearConductor();
         programarTurno(conductorId, vehiculoId);
 
         LocalDateTime inicio = LocalDateTime.now().plusHours(1).withNano(0);
@@ -181,7 +181,7 @@ class DespachoViajeControladorTests {
 
     @Test
     void vehiculoConTurnosNoSePuedeEliminar() throws Exception {
-        String vehiculoId = crearVehiculo();
+        Long vehiculoId = crearVehiculo();
         programarTurno(crearConductor(), vehiculoId);
 
         mockMvc.perform(delete("/api/vehiculos/" + vehiculoId))
@@ -197,10 +197,10 @@ class DespachoViajeControladorTests {
         return mockMvc.perform(peticion);
     }
 
-    private String idDe(ResultActions resultado) throws Exception {
+    private Long idDe(ResultActions resultado) throws Exception {
         JsonNode nodo = json.readTree(resultado.andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString());
-        return nodo.get("id").asText();
+        return nodo.get("datos").get("id").asLong();
     }
 
     private String tarifaJson() {
@@ -210,7 +210,7 @@ class DespachoViajeControladorTests {
                 """.formatted(LocalDate.now().minusDays(1));
     }
 
-    private String crearTarifa() throws Exception {
+    private Long crearTarifa() throws Exception {
         return idDe(enviar(post("/api/tarifas"), tarifaJson()));
     }
 
@@ -221,7 +221,7 @@ class DespachoViajeControladorTests {
                 """;
     }
 
-    private String crearPasajero() throws Exception {
+    private Long crearPasajero() throws Exception {
         return idDe(enviar(post("/api/pasajeros"), pasajeroJson()));
     }
 
@@ -232,50 +232,50 @@ class DespachoViajeControladorTests {
                 """.formatted(LocalDate.now().plusYears(2));
     }
 
-    private String crearConductor() throws Exception {
+    private Long crearConductor() throws Exception {
         return idDe(enviar(post("/api/conductores"), conductorJson()));
     }
 
-    private String crearVehiculo() throws Exception {
+    private Long crearVehiculo() throws Exception {
         return idDe(enviar(post("/api/vehiculos"), """
                 {"placa": "TAX101", "modelo": "Kia Picanto", "capacidad": 4,
                  "tipo": "Sedan", "estadoOperativo": true}
                 """));
     }
 
-    private String turnoJson(String conductorId, String vehiculoId, LocalDateTime inicio, LocalDateTime fin) {
+    private String turnoJson(Long conductorId, Long vehiculoId, LocalDateTime inicio, LocalDateTime fin) {
         return """
-                {"conductorId": "%s", "vehiculoId": "%s", "fechaInicio": "%s", "fechaFin": "%s"}
+                {"conductorId": %s, "vehiculoId": %s, "fechaInicio": "%s", "fechaFin": "%s"}
                 """.formatted(conductorId, vehiculoId, inicio, fin);
     }
 
-    private String programarTurno(String conductorId, String vehiculoId) throws Exception {
+    private Long programarTurno(Long conductorId, Long vehiculoId) throws Exception {
         LocalDateTime inicio = LocalDateTime.now().withNano(0);
         return idDe(enviar(post("/api/turnos"), turnoJson(conductorId, vehiculoId, inicio, inicio.plusHours(8))));
     }
 
-    private String viajeJson(String pasajeroId) {
+    private String viajeJson(Long pasajeroId) {
         return """
-                {"pasajeroId": "%s", "origen": "Centro", "destino": "Aeropuerto"}
+                {"pasajeroId": %s, "origen": "Centro", "destino": "Aeropuerto"}
                 """.formatted(pasajeroId);
     }
 
-    private String solicitarViaje(String pasajeroId) throws Exception {
+    private Long solicitarViaje(Long pasajeroId) throws Exception {
         return idDe(enviar(post("/api/viajes"), viajeJson(pasajeroId)));
     }
 
     /** Prepara vehiculo con turno en curso, solicita, asigna e inicia un viaje. Devuelve su id. */
-    private String viajeEnCurso(String pasajeroId) throws Exception {
-        String vehiculoId = crearVehiculo();
-        String turnoId = programarTurno(crearConductor(), vehiculoId);
+    private Long viajeEnCurso(Long pasajeroId) throws Exception {
+        Long vehiculoId = crearVehiculo();
+        Long turnoId = programarTurno(crearConductor(), vehiculoId);
         enviar(patch("/api/turnos/" + turnoId + "/iniciar"), null).andExpect(status().isOk());
 
-        String viajeId = solicitarViaje(pasajeroId);
-        enviar(patch("/api/viajes/" + viajeId + "/asignar"), "{\"vehiculoId\": \"" + vehiculoId + "\"}")
+        Long viajeId = solicitarViaje(pasajeroId);
+        enviar(patch("/api/viajes/" + viajeId + "/asignar"), "{\"vehiculoId\": " + vehiculoId + "}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estadoViaje").value("ASIGNADO"));
+                .andExpect(jsonPath("$.datos.estadoViaje").value("ASIGNADO"));
         enviar(patch("/api/viajes/" + viajeId + "/iniciar"), null)
-                .andExpect(jsonPath("$.estadoViaje").value("EN_CURSO"));
+                .andExpect(jsonPath("$.datos.estadoViaje").value("EN_CURSO"));
         return viajeId;
     }
 }

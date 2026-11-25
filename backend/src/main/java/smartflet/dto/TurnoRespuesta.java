@@ -9,9 +9,9 @@ import smartflet.modelo.Turno;
  * Datos de un turno que se devuelven al cliente.
  */
 public record TurnoRespuesta(
-        String id,
-        String conductorId,
-        String vehiculoId,
+        Long id,
+        Long conductorId,
+        Long vehiculoId,
         LocalDateTime fechaInicio,
         LocalDateTime fechaFin,
         EstadoTurno estado

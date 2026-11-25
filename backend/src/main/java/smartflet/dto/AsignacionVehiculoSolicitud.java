@@ -1,13 +1,13 @@
 package smartflet.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Cuerpo para asignar (o reasignar) un vehiculo a un viaje.
  */
 public record AsignacionVehiculoSolicitud(
 
-        @NotBlank(message = "El vehiculo es obligatorio")
-        String vehiculoId
+        @NotNull(message = "El vehiculo es obligatorio")
+        Long vehiculoId
 ) {
 }

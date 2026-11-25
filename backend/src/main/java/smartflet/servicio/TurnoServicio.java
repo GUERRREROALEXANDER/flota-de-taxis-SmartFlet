@@ -40,13 +40,13 @@ public class TurnoServicio {
     }
 
     /** consultarTurnos() del conductor. */
-    public List<TurnoRespuesta> listarPorConductor(String conductorId) {
+    public List<TurnoRespuesta> listarPorConductor(Long conductorId) {
         return turnoRepositorio.findByConductorIdOrderByFechaInicioDesc(conductorId).stream()
                 .map(TurnoRespuesta::desde)
                 .toList();
     }
 
-    public TurnoRespuesta buscarPorId(String id) {
+    public TurnoRespuesta buscarPorId(Long id) {
         return TurnoRespuesta.desde(obtenerTurno(id));
     }
 
@@ -81,7 +81,7 @@ public class TurnoServicio {
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    public TurnoRespuesta iniciar(String id) {
+    public TurnoRespuesta iniciar(Long id) {
         Turno turno = obtenerTurno(id);
         Conductor conductor = conductorRepositorio.findById(turno.getConductorId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Conductor", turno.getConductorId()));
@@ -92,13 +92,13 @@ public class TurnoServicio {
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    public TurnoRespuesta finalizar(String id) {
+    public TurnoRespuesta finalizar(Long id) {
         Turno turno = obtenerTurno(id);
         turno.finalizarTurno();
         return TurnoRespuesta.desde(turnoRepositorio.save(turno));
     }
 
-    private Turno obtenerTurno(String id) {
+    private Turno obtenerTurno(Long id) {
         return turnoRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Turno", id));
     }

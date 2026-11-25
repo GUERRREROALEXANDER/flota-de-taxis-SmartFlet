@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import smartflet.dto.PagoRespuesta;
+import smartflet.dto.RespuestaApi;
 import smartflet.servicio.PagoServicio;
 
 /**
- * Endpoints REST de pagos. No hay POST: el pago lo crea PATCH /api/viajes/{id}/finalizar.
+ * Endpoints REST de pagos: /api/pagos
+ * No hay POST: el pago lo crea PATCH /api/viajes/{id}/finalizar.
  */
 @RestController
 @RequestMapping("/api/pagos")
@@ -25,18 +27,21 @@ public class PagoControlador {
         this.pagoServicio = pagoServicio;
     }
 
+    /** GET /api/pagos */
     @GetMapping
-    public ResponseEntity<List<PagoRespuesta>> listar() {
-        return ResponseEntity.ok(pagoServicio.listarTodos());
+    public ResponseEntity<RespuestaApi<List<PagoRespuesta>>> listar() {
+        return ResponseEntity.ok(RespuestaApi.de("Pagos encontrados", pagoServicio.listarTodos()));
     }
 
+    /** GET /api/pagos/1 → el pago con ID 1, o 404 si no existe. */
     @GetMapping("/{id}")
-    public ResponseEntity<PagoRespuesta> buscarPorId(@PathVariable String id) {
-        return ResponseEntity.ok(pagoServicio.buscarPorId(id));
+    public ResponseEntity<RespuestaApi<PagoRespuesta>> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Pago encontrado", pagoServicio.buscarPorId(id)));
     }
 
+    /** PATCH /api/pagos/1/anular */
     @PatchMapping("/{id}/anular")
-    public ResponseEntity<PagoRespuesta> anular(@PathVariable String id) {
-        return ResponseEntity.ok(pagoServicio.anular(id));
+    public ResponseEntity<RespuestaApi<PagoRespuesta>> anular(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Pago anulado", pagoServicio.anular(id)));
     }
 }

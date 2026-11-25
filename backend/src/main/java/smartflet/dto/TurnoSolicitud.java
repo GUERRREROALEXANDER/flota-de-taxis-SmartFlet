@@ -2,7 +2,6 @@ package smartflet.dto;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -10,11 +9,11 @@ import jakarta.validation.constraints.NotNull;
  */
 public record TurnoSolicitud(
 
-        @NotBlank(message = "El conductor es obligatorio")
-        String conductorId,
+        @NotNull(message = "El conductor es obligatorio")
+        Long conductorId,
 
-        @NotBlank(message = "El vehiculo es obligatorio")
-        String vehiculoId,
+        @NotNull(message = "El vehiculo es obligatorio")
+        Long vehiculoId,
 
         @NotNull(message = "La fecha de inicio es obligatoria")
         LocalDateTime fechaInicio,

@@ -11,7 +11,7 @@ import smartflet.modelo.EstadoRegistro;
 import smartflet.modelo.Tarifa;
 
 @Repository
-public interface TarifaRepositorio extends MongoRepository<Tarifa, String> {
+public interface TarifaRepositorio extends MongoRepository<Tarifa, Long> {
 
     /** Tarifas con el estado dado cuya vigencia incluye la fecha (fin null = sin fecha de fin). */
     @Query("""
@@ -28,5 +28,5 @@ public interface TarifaRepositorio extends MongoRepository<Tarifa, String> {
               'fechaInicioVigencia': { $lte: ?2 },
               $or: [ { 'fechaFinVigencia': null }, { 'fechaFinVigencia': { $gte: ?1 } } ] }
             """, exists = true)
-    boolean existeSolapamiento(EstadoRegistro estado, LocalDate inicio, LocalDate fin, String idExcluido);
+    boolean existeSolapamiento(EstadoRegistro estado, LocalDate inicio, LocalDate fin, Long idExcluido);
 }

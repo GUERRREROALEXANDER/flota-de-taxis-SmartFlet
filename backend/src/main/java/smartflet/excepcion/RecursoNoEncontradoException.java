@@ -5,8 +5,9 @@ package smartflet.excepcion;
  */
 public class RecursoNoEncontradoException extends RuntimeException {
 
-    public RecursoNoEncontradoException(String recurso, String id) {
-        super(recurso + " con id " + id + " no existe");
+    public RecursoNoEncontradoException(String recurso, Long id) {
+        // Ej: "Conductor con ID 3 no encontrado"
+        super(recurso + " con ID " + id + " no encontrado");
     }
 
     /** Para busquedas que no son por id, ej. la tarifa vigente. */

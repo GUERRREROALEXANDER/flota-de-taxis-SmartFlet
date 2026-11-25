@@ -20,17 +20,17 @@ import smartflet.excepcion.ReglaNegocioException;
  *   en una sola operacion atomica sobre el mismo documento.
  */
 @Document(collection = "viajes")
-public class Viaje {
+public class Viaje implements EntidadConId {
 
     @Id
-    private String id;
+    private Long id;
 
     @Indexed
-    private String pasajeroId;
+    private Long pasajeroId;
 
     /** Null mientras el viaje esta SOLICITADO. */
     @Indexed
-    private String vehiculoId;
+    private Long vehiculoId;
 
     private Tarifa tarifa;
 
@@ -55,7 +55,7 @@ public class Viaje {
     }
 
     /** Solicitar un viaje: queda SOLICITADO, sin vehiculo, con la tarifa fijada. */
-    public Viaje(String pasajeroId, Tarifa tarifa, String origen, String destino) {
+    public Viaje(Long pasajeroId, Tarifa tarifa, String origen, String destino) {
         this.pasajeroId = pasajeroId;
         this.tarifa = tarifa;
         this.origen = origen;
@@ -106,15 +106,21 @@ public class Viaje {
         }
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
     }
 
-    public String getPasajeroId() {
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getPasajeroId() {
         return pasajeroId;
     }
 
-    public String getVehiculoId() {
+    public Long getVehiculoId() {
         return vehiculoId;
     }
 

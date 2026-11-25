@@ -8,12 +8,12 @@ import org.springframework.stereotype.Repository;
 import smartflet.modelo.Vehiculo;
 
 @Repository
-public interface VehiculoRepositorio extends MongoRepository<Vehiculo, String> {
+public interface VehiculoRepositorio extends MongoRepository<Vehiculo, Long> {
 
     boolean existsByPlaca(String placa);
 
     /** Para validar placa repetida al actualizar, sin contar el mismo vehiculo. */
-    boolean existsByPlacaAndIdNot(String placa, String id);
+    boolean existsByPlacaAndIdNot(String placa, Long id);
 
     List<Vehiculo> findByEstadoOperativo(Boolean estadoOperativo);
 }

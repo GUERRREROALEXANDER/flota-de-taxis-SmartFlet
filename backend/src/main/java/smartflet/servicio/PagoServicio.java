@@ -28,19 +28,19 @@ public class PagoServicio {
                 .toList();
     }
 
-    public PagoRespuesta buscarPorId(String id) {
+    public PagoRespuesta buscarPorId(Long id) {
         Viaje viaje = obtenerViajeDelPago(id);
         return PagoRespuesta.desde(viaje.getPago(), viaje.getId());
     }
 
-    public PagoRespuesta anular(String id) {
+    public PagoRespuesta anular(Long id) {
         Viaje viaje = obtenerViajeDelPago(id);
         viaje.getPago().anularPago();
         Viaje guardado = viajeRepositorio.save(viaje);
         return PagoRespuesta.desde(guardado.getPago(), guardado.getId());
     }
 
-    private Viaje obtenerViajeDelPago(String pagoId) {
+    private Viaje obtenerViajeDelPago(Long pagoId) {
         return viajeRepositorio.findByPagoId(pagoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago", pagoId));
     }

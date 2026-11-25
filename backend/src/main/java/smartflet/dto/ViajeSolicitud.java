@@ -1,5 +1,6 @@
 package smartflet.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -8,8 +9,8 @@ import jakarta.validation.constraints.Size;
  */
 public record ViajeSolicitud(
 
-        @NotBlank(message = "El pasajero es obligatorio")
-        String pasajeroId,
+        @NotNull(message = "El pasajero es obligatorio")
+        Long pasajeroId,
 
         @NotBlank(message = "El origen es obligatorio")
         @Size(max = 150, message = "El origen no puede superar 150 caracteres")

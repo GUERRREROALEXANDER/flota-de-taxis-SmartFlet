@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 import smartflet.modelo.Pasajero;
 
 @Repository
-public interface PasajeroRepositorio extends MongoRepository<Pasajero, String> {
+public interface PasajeroRepositorio extends MongoRepository<Pasajero, Long> {
 
     boolean existsByIdentificacion(String identificacion);
 
-    boolean existsByIdentificacionAndIdNot(String identificacion, String id);
+    boolean existsByIdentificacionAndIdNot(String identificacion, Long id);
 }

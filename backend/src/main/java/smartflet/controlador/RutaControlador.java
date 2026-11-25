@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import smartflet.dto.RespuestaApi;
 import smartflet.dto.RutaRespuesta;
 import smartflet.dto.RutaSolicitud;
 import smartflet.servicio.RutaServicio;
 
 /**
- * Endpoints REST de rutas. Los errores (404, 400) los resuelve ManejadorGlobalExcepciones.
+ * Endpoints REST de rutas: /api/rutas
+ * Responde siempre { mensaje, datos }. Los errores (404, 400, 409) los resuelve ManejadorGlobalExcepciones.
  */
 @RestController
 @RequestMapping("/api/rutas")
@@ -34,34 +36,38 @@ public class RutaControlador {
 
     /** GET /api/rutas  o  GET /api/rutas?origen=Centro */
     @GetMapping
-    public ResponseEntity<List<RutaRespuesta>> listar(@RequestParam(required = false) String origen) {
+    public ResponseEntity<RespuestaApi<List<RutaRespuesta>>> listar(@RequestParam(required = false) String origen) {
         List<RutaRespuesta> rutas = (origen == null || origen.isBlank())
                 ? rutaServicio.listarTodas()
                 : rutaServicio.buscarPorOrigen(origen);
-        return ResponseEntity.ok(rutas);
+        return ResponseEntity.ok(RespuestaApi.de("Rutas encontradas", rutas));
     }
 
+    /** GET /api/rutas/1 → la ruta con ID 1, o 404 si no existe. */
     @GetMapping("/{id}")
-    public ResponseEntity<RutaRespuesta> buscarPorId(@PathVariable String id) {
-        return ResponseEntity.ok(rutaServicio.buscarPorId(id));
+    public ResponseEntity<RespuestaApi<RutaRespuesta>> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Ruta encontrada", rutaServicio.buscarPorId(id)));
     }
 
+    /** POST /api/rutas → 201 con la ruta creada. */
     @PostMapping
-    public ResponseEntity<RutaRespuesta> crear(@Valid @RequestBody RutaSolicitud solicitud) {
+    public ResponseEntity<RespuestaApi<RutaRespuesta>> crear(@Valid @RequestBody RutaSolicitud solicitud) {
         RutaRespuesta creada = rutaServicio.crear(solicitud);
-        URI ubicacion = URI.create("/api/rutas/" + creada.id());
-        return ResponseEntity.created(ubicacion).body(creada);
+        return ResponseEntity.created(URI.create("/api/rutas/" + creada.id()))
+                .body(RespuestaApi.de("Ruta creada con exito", creada));
     }
 
+    /** PUT /api/rutas/1 → reemplaza los datos de la ruta 1. */
     @PutMapping("/{id}")
-    public ResponseEntity<RutaRespuesta> actualizar(@PathVariable String id,
-                                                    @Valid @RequestBody RutaSolicitud solicitud) {
-        return ResponseEntity.ok(rutaServicio.actualizar(id, solicitud));
+    public ResponseEntity<RespuestaApi<RutaRespuesta>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody RutaSolicitud solicitud) {
+        return ResponseEntity.ok(RespuestaApi.de("Ruta actualizada con exito", rutaServicio.actualizar(id, solicitud)));
     }
 
+    /** DELETE /api/rutas/1 */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable String id) {
+    public ResponseEntity<RespuestaApi<Void>> eliminar(@PathVariable Long id) {
         rutaServicio.eliminar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(RespuestaApi.de("Ruta eliminada con exito", null));
     }
 }

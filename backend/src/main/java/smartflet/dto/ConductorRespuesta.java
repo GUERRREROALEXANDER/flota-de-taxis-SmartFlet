@@ -9,7 +9,7 @@ import smartflet.modelo.EstadoRegistro;
  * Datos de un conductor que se devuelven al cliente.
  */
 public record ConductorRespuesta(
-        String id,
+        Long id,
         String identificacion,
         String nombre,
         String numeroLicencia,

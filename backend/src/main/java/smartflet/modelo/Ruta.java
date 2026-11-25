@@ -7,10 +7,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Trayecto entre un origen y un destino.
  */
 @Document(collection = "rutas")
-public class Ruta {
+public class Ruta implements EntidadConId {
 
     @Id
-    private String id;
+    private Long id;
 
     private String origen;
 
@@ -31,8 +31,14 @@ public class Ruta {
         this.duracionEstimadaMinutos = duracionEstimadaMinutos;
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getOrigen() {

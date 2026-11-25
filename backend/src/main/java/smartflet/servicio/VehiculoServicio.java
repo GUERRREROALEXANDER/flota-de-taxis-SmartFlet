@@ -47,7 +47,7 @@ public class VehiculoServicio {
                 .toList();
     }
 
-    public VehiculoRespuesta buscarPorId(String id) {
+    public VehiculoRespuesta buscarPorId(Long id) {
         return VehiculoRespuesta.desde(obtenerVehiculo(id));
     }
 
@@ -67,7 +67,7 @@ public class VehiculoServicio {
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    public VehiculoRespuesta actualizar(String id, VehiculoSolicitud solicitud) {
+    public VehiculoRespuesta actualizar(Long id, VehiculoSolicitud solicitud) {
         Vehiculo vehiculo = obtenerVehiculo(id);
 
         String placa = normalizarPlaca(solicitud.placa());
@@ -85,14 +85,14 @@ public class VehiculoServicio {
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    public VehiculoRespuesta cambiarEstado(String id, Boolean estadoOperativo) {
+    public VehiculoRespuesta cambiarEstado(Long id, Boolean estadoOperativo) {
         Vehiculo vehiculo = obtenerVehiculo(id);
         validarPuedeSalirDeServicio(vehiculo, estadoOperativo);
         vehiculo.setEstadoOperativo(estadoOperativo);
         return VehiculoRespuesta.desde(vehiculoRepositorio.save(vehiculo));
     }
 
-    public void eliminar(String id) {
+    public void eliminar(Long id) {
         Vehiculo vehiculo = obtenerVehiculo(id);
         if (turnoRepositorio.existsByVehiculoId(id) || viajeRepositorio.existsByVehiculoId(id)) {
             throw new ReglaNegocioException("El vehiculo " + vehiculo.getPlaca()
@@ -110,7 +110,7 @@ public class VehiculoServicio {
         }
     }
 
-    private Vehiculo obtenerVehiculo(String id) {
+    private Vehiculo obtenerVehiculo(Long id) {
         return vehiculoRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Vehiculo", id));
     }

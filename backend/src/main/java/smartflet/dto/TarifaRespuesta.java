@@ -10,7 +10,7 @@ import smartflet.modelo.Tarifa;
  * Datos de una tarifa que se devuelven al cliente.
  */
 public record TarifaRespuesta(
-        String id,
+        Long id,
         String nombre,
         BigDecimal valorBase,
         BigDecimal valorPorKm,

@@ -36,7 +36,7 @@ public class RutaServicio {
                 .toList();
     }
 
-    public RutaRespuesta buscarPorId(String id) {
+    public RutaRespuesta buscarPorId(Long id) {
         return RutaRespuesta.desde(obtenerRuta(id));
     }
 
@@ -53,7 +53,7 @@ public class RutaServicio {
         return RutaRespuesta.desde(rutaRepositorio.save(ruta));
     }
 
-    public RutaRespuesta actualizar(String id, RutaSolicitud solicitud) {
+    public RutaRespuesta actualizar(Long id, RutaSolicitud solicitud) {
         Ruta ruta = obtenerRuta(id);
 
         String origen = solicitud.origen().trim();
@@ -72,12 +72,12 @@ public class RutaServicio {
         return RutaRespuesta.desde(rutaRepositorio.save(ruta));
     }
 
-    public void eliminar(String id) {
+    public void eliminar(Long id) {
         Ruta ruta = obtenerRuta(id);
         rutaRepositorio.delete(ruta);
     }
 
-    private Ruta obtenerRuta(String id) {
+    private Ruta obtenerRuta(Long id) {
         return rutaRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Ruta", id));
     }

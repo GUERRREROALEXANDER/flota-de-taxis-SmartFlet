@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import smartflet.dto.RespuestaApi;
 import smartflet.dto.TurnoRespuesta;
 import smartflet.dto.TurnoSolicitud;
 import smartflet.servicio.TurnoServicio;
 
 /**
- * Endpoints REST de turnos.
+ * Endpoints REST de turnos: /api/turnos
+ * Un turno dice que conductor maneja que vehiculo y en que horario.
  */
 @RestController
 @RequestMapping("/api/turnos")
@@ -33,30 +35,36 @@ public class TurnoControlador {
 
     /** GET /api/turnos  o  GET /api/turnos?conductorId=1 */
     @GetMapping
-    public ResponseEntity<List<TurnoRespuesta>> listar(@RequestParam(required = false) String conductorId) {
-        return ResponseEntity.ok(conductorId == null
+    public ResponseEntity<RespuestaApi<List<TurnoRespuesta>>> listar(@RequestParam(required = false) Long conductorId) {
+        List<TurnoRespuesta> turnos = (conductorId == null)
                 ? turnoServicio.listarTodos()
-                : turnoServicio.listarPorConductor(conductorId));
+                : turnoServicio.listarPorConductor(conductorId);
+        return ResponseEntity.ok(RespuestaApi.de("Turnos encontrados", turnos));
     }
 
+    /** GET /api/turnos/1 → el turno con ID 1, o 404 si no existe. */
     @GetMapping("/{id}")
-    public ResponseEntity<TurnoRespuesta> buscarPorId(@PathVariable String id) {
-        return ResponseEntity.ok(turnoServicio.buscarPorId(id));
+    public ResponseEntity<RespuestaApi<TurnoRespuesta>> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Turno encontrado", turnoServicio.buscarPorId(id)));
     }
 
+    /** POST /api/turnos → 201 con el turno programado. */
     @PostMapping
-    public ResponseEntity<TurnoRespuesta> programar(@Valid @RequestBody TurnoSolicitud solicitud) {
+    public ResponseEntity<RespuestaApi<TurnoRespuesta>> programar(@Valid @RequestBody TurnoSolicitud solicitud) {
         TurnoRespuesta creado = turnoServicio.programar(solicitud);
-        return ResponseEntity.created(URI.create("/api/turnos/" + creado.id())).body(creado);
+        return ResponseEntity.created(URI.create("/api/turnos/" + creado.id()))
+                .body(RespuestaApi.de("Turno programado con exito", creado));
     }
 
+    /** PATCH /api/turnos/1/iniciar → PROGRAMADO pasa a EN_CURSO. */
     @PatchMapping("/{id}/iniciar")
-    public ResponseEntity<TurnoRespuesta> iniciar(@PathVariable String id) {
-        return ResponseEntity.ok(turnoServicio.iniciar(id));
+    public ResponseEntity<RespuestaApi<TurnoRespuesta>> iniciar(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Turno iniciado", turnoServicio.iniciar(id)));
     }
 
+    /** PATCH /api/turnos/1/finalizar → EN_CURSO pasa a FINALIZADO. */
     @PatchMapping("/{id}/finalizar")
-    public ResponseEntity<TurnoRespuesta> finalizar(@PathVariable String id) {
-        return ResponseEntity.ok(turnoServicio.finalizar(id));
+    public ResponseEntity<RespuestaApi<TurnoRespuesta>> finalizar(@PathVariable Long id) {
+        return ResponseEntity.ok(RespuestaApi.de("Turno finalizado", turnoServicio.finalizar(id)));
     }
 }

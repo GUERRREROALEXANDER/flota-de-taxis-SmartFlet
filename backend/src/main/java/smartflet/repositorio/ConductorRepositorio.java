@@ -9,15 +9,15 @@ import smartflet.modelo.Conductor;
 import smartflet.modelo.EstadoRegistro;
 
 @Repository
-public interface ConductorRepositorio extends MongoRepository<Conductor, String> {
+public interface ConductorRepositorio extends MongoRepository<Conductor, Long> {
 
     boolean existsByIdentificacion(String identificacion);
 
-    boolean existsByIdentificacionAndIdNot(String identificacion, String id);
+    boolean existsByIdentificacionAndIdNot(String identificacion, Long id);
 
     boolean existsByNumeroLicencia(String numeroLicencia);
 
-    boolean existsByNumeroLicenciaAndIdNot(String numeroLicencia, String id);
+    boolean existsByNumeroLicenciaAndIdNot(String numeroLicencia, Long id);
 
     List<Conductor> findByEstadoConductor(EstadoRegistro estadoConductor);
 }

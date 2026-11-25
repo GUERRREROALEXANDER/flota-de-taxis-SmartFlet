@@ -3,7 +3,6 @@ package smartflet.modelo;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
@@ -13,9 +12,9 @@ import smartflet.excepcion.ReglaNegocioException;
  * Cobro de un viaje finalizado. No es un documento propio: vive embebido dentro de su Viaje (composicion).
  * Solo lo crea Viaje.finalizarViaje() (constructor de paquete). Tiene id propio para consultarlo en /api/pagos/{id}.
  */
-public class Pago {
+public class Pago implements EntidadConId {
 
-    private String id;
+    private Long id;
 
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal monto;
@@ -30,9 +29,11 @@ public class Pago {
     protected Pago() {
     }
 
-    /** Registrar el pago: queda PAGADO con fecha de ahora. */
+    /**
+     * Registrar el pago: queda PAGADO con fecha de ahora.
+     * El id queda null aqui; AsignadorIdsMongo le pone el siguiente numero al guardar el viaje.
+     */
     Pago(BigDecimal monto, MetodoPago metodoPago) {
-        this.id = new ObjectId().toHexString();
         this.monto = monto;
         this.metodoPago = metodoPago;
         this.fechaPago = LocalDateTime.now();
@@ -46,8 +47,12 @@ public class Pago {
         this.estadoPago = EstadoPago.ANULADO;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public BigDecimal getMonto() {
