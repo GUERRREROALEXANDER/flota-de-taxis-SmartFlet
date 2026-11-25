@@ -1,0 +1,1037 @@
+{
+  "info": {
+    "_postman_id": "smartflet-exposicion",
+    "name": "SmartFlet · Exposicion",
+    "description": "Demo guiada de la API de SmartFlet en AWS. Ejecutar EN ORDEN (1 a 26) o con Run collection. Cada peticion tiene en su pestaña de documentacion lo que se explica en ese paso.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Acto 1 · Seguridad y login",
+      "item": [
+        {
+          "name": "01 · Pedir datos SIN iniciar sesion → 401",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Datos unicos para cada corrida: asi la coleccion se puede ejecutar muchas veces.",
+                  "const letras = () => Array.from({length: 3}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(\"\");",
+                  "const num = (n) => String(Math.floor(Math.random() * 10 ** n)).padStart(n, \"0\");",
+                  "const v = (k, x) => pm.collectionVariables.set(k, x);",
+                  "v(\"placa\", letras() + num(3));",
+                  "v(\"placaB\", letras() + num(3));",
+                  "v(\"idConductor\", \"9\" + num(9));",
+                  "v(\"licencia\", \"LIC-\" + num(6));",
+                  "v(\"idPasajero\", \"8\" + num(9));",
+                  "v(\"lugar\", \"Barrio \" + num(5));",
+                  "const pad = (x) => String(x).padStart(2, \"0\");",
+                  "const local = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;",
+                  "const ahora = new Date();",
+                  "v(\"hoy\", local(ahora).slice(0, 10));",
+                  "v(\"turnoInicio\", local(new Date(ahora.getTime() - 3600e3)));",
+                  "v(\"turnoFin\", local(new Date(ahora.getTime() + 8 * 3600e3)));",
+                  "const anio = 1100 + Math.floor(Math.random() * 800); // en el pasado: no se cruza con la tarifa vigente",
+                  "v(\"tarifaFuturaInicio\", anio + \"-01-01\");",
+                  "v(\"tarifaFuturaFin\", anio + \"-12-31\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Trae una pista\", () => pm.expect(pm.response.json().pista).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "La API esta protegida con Spring Security. Sin sesion responde 401 en JSON, con un campo \"pista\" que explica que hacer."
+          }
+        },
+        {
+          "name": "02 · Login con clave equivocada → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Mensaje generico (no revela si existe el usuario)\", () => pm.expect(pm.response.json().mensaje).to.eql(\"Usuario o contrasena incorrectos\"));",
+                  "pm.test(\"La pista dice cuantos intentos quedan\", () => pm.expect(pm.response.json().pista).to.include(\"intento\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{adminUsuario}}\",\n  \"clave\": \"clave-incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Mensaje generico (\"usuario o contrasena incorrectos\") para no revelar si el usuario existe. La pista dice cuantos intentos quedan: a los 5 fallos se bloquea 5 minutos (429)."
+          }
+        },
+        {
+          "name": "03 · Login como administrador → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 (si da 401 revisa adminClave en el entorno)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Rol ADMINISTRADOR\", () => pm.expect(pm.response.json().rol).to.eql(\"ADMINISTRADOR\"));",
+                  "pm.test(\"Llega la cookie de sesion\", () => pm.expect(pm.response.headers.get(\"Set-Cookie\") || pm.cookies.has(\"JSESSIONID\")).to.be.ok);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{adminUsuario}}\",\n  \"clave\": \"{{adminClave}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "BCrypt compara la clave con el hash guardado en Mongo. Si es correcta, Spring guarda la autenticacion en la sesion y responde la cookie JSESSIONID (HttpOnly). Postman la reenvia sola en las siguientes peticiones (pestaña Cookies)."
+          }
+        },
+        {
+          "name": "04 · ¿Quien soy? (GET /auth/sesion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es el admin\", () => pm.expect(pm.response.json().usuario).to.eql(pm.environment.get(\"adminUsuario\") || \"admin\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/sesion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "sesion"
+              ]
+            },
+            "description": "Con la cookie, el servidor ya sabe quien es: devuelve usuario, nombre y rol. El frontend usa esto al recargar la pagina."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Acto 2 · Consultar datos",
+      "item": [
+        {
+          "name": "05 · Ver la flota (GET /vehiculos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Hay vehiculos\", () => pm.expect(pm.response.json().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "Flujo por capas: VehiculoControlador → VehiculoServicio → VehiculoRepositorio (Spring Data MongoDB). Devuelve DTOs, no las entidades."
+          }
+        },
+        {
+          "name": "06 · Tarifa vigente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tiene valor base y valor por km\", () => pm.expect(pm.response.json()).to.include.keys(\"valorBase\",\"valorPorKm\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas/vigente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas",
+                "vigente"
+              ]
+            },
+            "description": "La tarifa que aplica hoy (valor base + valor por km). Con ella se calcula el cobro de cada viaje."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Acto 3 · Registrar y validar",
+      "item": [
+        {
+          "name": "07 · Registrar vehiculo → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"vehiculoId\", pm.response.json().id);",
+                  "pm.test(\"estadoOperativo = true\", () => pm.expect(pm.response.json().estadoOperativo).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"modelo\": \"Kia Picanto\",\n  \"capacidad\": 4,\n  \"tipo\": \"Hatchback\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "POST con JSON. @Valid revisa el DTO y el servicio verifica que la placa no exista. La placa sale al azar para poder repetir la demo."
+          }
+        },
+        {
+          "name": "08 · Misma placa otra vez → 409 Conflict",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: placa\", () => pm.expect(pm.response.json().mensaje).to.include(\"placa\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"modelo\": \"Otro\",\n  \"capacidad\": 4,\n  \"tipo\": \"Sedan\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "Regla de negocio: placa unica. ManejadorGlobalExcepciones convierte la excepcion en 409 con mensaje claro."
+          }
+        },
+        {
+          "name": "09 · Vehiculo con datos invalidos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato ErrorRespuesta\", () => pm.expect(pm.response.json()).to.include.keys(\"estado\",\"mensaje\",\"errores\",\"fecha\"));",
+                  "pm.test(\"Error en el campo placa\", () => pm.expect(pm.response.json().errores).to.have.property(\"placa\"));",
+                  "pm.test(\"Error en el campo modelo\", () => pm.expect(pm.response.json().errores).to.have.property(\"modelo\"));",
+                  "pm.test(\"Error en el campo capacidad\", () => pm.expect(pm.response.json().errores).to.have.property(\"capacidad\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"12\",\n  \"modelo\": \"\",\n  \"capacidad\": 12,\n  \"tipo\": \"Sedan\",\n  \"estadoOperativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "Bean Validation: el error dice exactamente que campo falla (placa, modelo, capacidad), sin llegar al servicio."
+          }
+        },
+        {
+          "name": "10 · Registrar conductor → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"conductorId\", pm.response.json().id);",
+                  "pm.test(\"estadoConductor = ACTIVO\", () => pm.expect(pm.response.json().estadoConductor).to.eql(\"ACTIVO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idConductor}}\",\n  \"nombre\": \"Conductor Postman\",\n  \"numeroLicencia\": \"{{licencia}}\",\n  \"fechaVencimientoLicencia\": \"2035-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conductores"
+              ]
+            },
+            "description": "Conductor con licencia vigente: sin licencia vigente no se le pueden programar turnos."
+          }
+        },
+        {
+          "name": "11 · Registrar pasajero → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"pasajeroId\", pm.response.json().id);",
+                  "pm.test(\"estadoCuenta = ACTIVO\", () => pm.expect(pm.response.json().estadoCuenta).to.eql(\"ACTIVO\"));",
+                  "pm.test(\"Fecha de registro = hoy\", () => pm.expect(pm.response.json().fechaRegistro).to.eql(pm.collectionVariables.get(\"hoy\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"{{idPasajero}}\",\n  \"nombre\": \"Pasajero Postman\",\n  \"telefono\": \"+57 300 123 4567\",\n  \"correoElectronico\": \"postman{{idPasajero}}@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            },
+            "description": "El pasajero que va a pedir el viaje."
+          }
+        },
+        {
+          "name": "12 · Pasajero con correo y telefono invalidos → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error en el campo telefono\", () => pm.expect(pm.response.json().errores).to.have.property(\"telefono\"));",
+                  "pm.test(\"Error en el campo correoElectronico\", () => pm.expect(pm.response.json().errores).to.have.property(\"correoElectronico\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"123\",\n  \"nombre\": \"Malo\",\n  \"telefono\": \"abc\",\n  \"correoElectronico\": \"no-es-correo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pasajeros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pasajeros"
+              ]
+            },
+            "description": "Validacion de formato: @Email y patron de telefono."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Acto 4 · Turno del conductor",
+      "item": [
+        {
+          "name": "13 · Programar turno (conductor + vehiculo) → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"turnoId\", pm.response.json().id);",
+                  "pm.test(\"estado = PROGRAMADO\", () => pm.expect(pm.response.json().estado).to.eql(\"PROGRAMADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"{{turnoInicio}}\",\n  \"fechaFin\": \"{{turnoFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            },
+            "description": "Un turno une un conductor con un vehiculo en un horario. Nace PROGRAMADO."
+          }
+        },
+        {
+          "name": "14 · Turno que se cruza con otro → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje: se cruza\", () => pm.expect(pm.response.json().mensaje).to.include(\"se cruza\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conductorId\": \"{{conductorId}}\",\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"fechaInicio\": \"{{turnoInicio}}\",\n  \"fechaFin\": \"{{turnoFin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/turnos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            },
+            "description": "El sistema impide que el mismo conductor o vehiculo tenga dos turnos a la misma hora."
+          }
+        },
+        {
+          "name": "15 · Iniciar turno → EN_CURSO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado = EN_CURSO\", () => pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "iniciar"
+              ]
+            },
+            "description": "Maquina de estados: PROGRAMADO → EN_CURSO → FINALIZADO. Solo un vehiculo con turno en curso puede recibir viajes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Acto 5 · Viaje completo y pago",
+      "item": [
+        {
+          "name": "16 · Pasajero solicita viaje → SOLICITADO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"viajeId\", pm.response.json().id);",
+                  "pm.test(\"estadoViaje = SOLICITADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"SOLICITADO\"));",
+                  "pm.test(\"Guarda copia de la tarifa vigente\", () => { const v = pm.response.json(); pm.expect(v.tarifaValorBase).to.be.a(\"number\"); pm.expect(v.tarifaValorPorKm).to.be.a(\"number\"); });",
+                  "pm.collectionVariables.set(\"valorBase\", pm.response.json().tarifaValorBase);",
+                  "pm.collectionVariables.set(\"valorPorKm\", pm.response.json().tarifaValorPorKm);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pasajeroId\": \"{{pasajeroId}}\",\n  \"origen\": \"Universidad Nacional\",\n  \"destino\": \"Aeropuerto El Dorado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes"
+              ]
+            },
+            "description": "El viaje guarda una COPIA de la tarifa vigente: si manana cambia la tarifa, este viaje se cobra con la de hoy."
+          }
+        },
+        {
+          "name": "17 · Despachar: asignar vehiculo → ASIGNADO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = ASIGNADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"ASIGNADO\"));",
+                  "pm.test(\"Queda con el vehiculo\", () => pm.expect(pm.response.json().vehiculoId).to.eql(pm.collectionVariables.get(\"vehiculoId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "asignar"
+              ]
+            },
+            "description": "ViajeServicio.asignarVehiculo valida: vehiculo operativo, con turno EN_CURSO y sin otro viaje activo. Luego Viaje.asignarVehiculo cambia el estado."
+          }
+        },
+        {
+          "name": "18 · Iniciar viaje → EN_CURSO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = EN_CURSO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"EN_CURSO\"));",
+                  "pm.test(\"Registra fecha de inicio\", () => pm.expect(pm.response.json().fechaInicio).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "iniciar"
+              ]
+            },
+            "description": "Registra la hora de inicio."
+          }
+        },
+        {
+          "name": "19 · Intentar cancelar un viaje en curso → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensaje: antes de iniciar\", () => pm.expect(pm.response.json().mensaje).to.include(\"antes de iniciar\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "cancelar"
+              ]
+            },
+            "description": "Regla de negocio: solo se cancela antes de iniciar. La regla vive en Viaje.cancelarViaje (GRASP Experto: el viaje conoce su estado)."
+          }
+        },
+        {
+          "name": "20 · Finalizar viaje y cobrar → FINALIZADO + pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estadoViaje = FINALIZADO\", () => pm.expect(pm.response.json().estadoViaje).to.eql(\"FINALIZADO\"));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"Crea el pago (Viaje es Creador de Pago)\", () => { pm.expect(v.pago).to.be.an(\"object\"); pm.expect(v.pago.estadoPago).to.eql(\"PAGADO\"); });",
+                  "pm.test(\"Monto = valor base + valor por km x 12,5 km\", () => { const esperado = Number(pm.collectionVariables.get(\"valorBase\")) + Number(pm.collectionVariables.get(\"valorPorKm\")) * 12.5; pm.expect(Number(v.pago.monto)).to.be.closeTo(esperado, 1); });",
+                  "pm.collectionVariables.set(\"pagoId\", v.pago.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanciaKm\": 12.5,\n  \"metodoPago\": \"TARJETA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/viajes/{{viajeId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "viajes",
+                "{{viajeId}}",
+                "finalizar"
+              ]
+            },
+            "description": "Viaje.finalizarViaje crea el Pago (GRASP Creador) y Tarifa.calcularPrecio hace la cuenta (GRASP Experto): valor base + valor por km × 12,5 km. La prueba verifica el monto."
+          }
+        },
+        {
+          "name": "21 · Consultar el pago generado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"metodoPago = TARJETA\", () => pm.expect(pm.response.json().metodoPago).to.eql(\"TARJETA\"));",
+                  "pm.test(\"Apunta a su viaje\", () => pm.expect(pm.response.json().viajeId).to.eql(pm.collectionVariables.get(\"viajeId\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/{{pagoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "{{pagoId}}"
+              ]
+            },
+            "description": "El pago queda enlazado a su viaje."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Acto 6 · Roles y cierre",
+      "item": [
+        {
+          "name": "22 · Finalizar turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado = FINALIZADO\", () => pm.expect(pm.response.json().estado).to.eql(\"FINALIZADO\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/turnos/{{turnoId}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "turnos",
+                "{{turnoId}}",
+                "finalizar"
+              ]
+            },
+            "description": "Cierra el turno del conductor: deja la demo limpia."
+          }
+        },
+        {
+          "name": "23 · Entrar como OPERADOR (cuenta demo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 (si da 401, carga la cuenta demo: despliegue/cargar-datos-demo.ps1)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Rol OPERADOR\", () => pm.expect(pm.response.json().rol).to.eql(\"OPERADOR\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{demoUsuario}}\",\n  \"clave\": \"{{demoClave}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Iniciar sesion de nuevo cambia el usuario de la sesion: ahora somos \"demo\", rol OPERADOR."
+          }
+        },
+        {
+          "name": "24 · Operador intenta crear vehiculo → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"La pista dice el rol\", () => pm.expect(pm.response.json().pista).to.include(\"OPERADOR\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"ZZZ999\",\n  \"modelo\": \"Prueba\",\n  \"capacidad\": 4,\n  \"tipo\": \"Sedan\",\n  \"estadoOperativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "Hay sesion pero el rol no alcanza: 403 (distinto de 401). La pista dice el rol actual. Las reglas estan en ConfiguracionSeguridad.reglasDeAcceso."
+          }
+        },
+        {
+          "name": "25 · Cerrar sesion → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Invalida la sesion en el servidor."
+          }
+        },
+        {
+          "name": "26 · Pedir datos despues de cerrar sesion → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos"
+              ]
+            },
+            "description": "La cookie vieja ya no sirve. Fin de la demo."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://3.150.79.12/api"
+    },
+    {
+      "key": "adminUsuario",
+      "value": "admin"
+    },
+    {
+      "key": "adminClave",
+      "value": ""
+    },
+    {
+      "key": "demoUsuario",
+      "value": "demo"
+    },
+    {
+      "key": "demoClave",
+      "value": "demo2026"
+    }
+  ]
+}
