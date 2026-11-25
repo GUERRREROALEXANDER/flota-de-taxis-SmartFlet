@@ -11,3 +11,6 @@ de:
     mongodb:
       embedded:
         version: 7.0.4
+# Las pruebas crean sus propios datos: no se cargan los de ejemplo.
+smartflet:
+  datos-iniciales: false
