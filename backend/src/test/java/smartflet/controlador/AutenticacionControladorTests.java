@@ -56,6 +56,11 @@ class AutenticacionControladorTests {
     }
 
     @Test
+    void cerrarSesionSinSesionTambienResponde204() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")).andExpect(status().isNoContent());
+    }
+
+    @Test
     void loginCorrectoAbreSesionYPermiteConsultar() throws Exception {
         MockHttpSession sesion = (MockHttpSession) mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON).content(login("ADMIN", "clave-de-pruebas")))

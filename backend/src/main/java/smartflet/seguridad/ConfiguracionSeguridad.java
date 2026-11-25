@@ -76,7 +76,8 @@ public class ConfiguracionSeguridad {
     private void reglasDeAcceso(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry reglas) {
         reglas
-            .requestMatchers("/api/auth/login").permitAll()
+            // logout tambien es publico: cerrar sesion sin tenerla no es un error (responde 204 igual).
+            .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
             .requestMatchers("/api/auth/**").authenticated()
             .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
             .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
