@@ -3,6 +3,8 @@
 > **Estado:** En desarrollo. Backend Spring Boot con API REST sobre MongoDB (vehículos, rutas, pasajeros, conductores, turnos, tarifas, viajes y pagos) y frontend web (carpeta `frontend/`) con panel, viajes, turnos, vehículos, conductores, rutas, pasajeros, tarifas, pagos y reportes.
 > Lo que aún no está implementado se indica como **(pendiente)**.
 >
+> 🌐 **Aplicación en línea:** [http://3.150.79.12](http://3.150.79.12)
+>
 > 📖 Documentación completa y ordenada en la **[Wiki del proyecto](https://github.com/GUERRREROALEXANDER/flota-de-taxis-SmartFlet/wiki)**.
 
 ---
