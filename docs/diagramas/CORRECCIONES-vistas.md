@@ -17,7 +17,7 @@ El conector MCP de VP no aplica colores ni oculta miembros, así que estos pasos
    - Frontend (vistas funcional y despliegue): morado claro `#EADCF8`
    - MongoDB (clase `MongoDB`, nodo Atlas, colecciones): gris `#D0D0D0`
    - Módulos y nodo del backend (funcional y despliegue): azul claro `#D6E9FF`
-3. **Leyenda.** En las vistas lógica, de desarrollo, funcional y de despliegue hay una pila de notas "Leyenda". Pinta cada nota con el color que nombra su texto.
+3. **Leyenda (opcional).** Las notas de leyenda se borraron porque, sin colores, decían colores que no existían. Si pintas las capas, puedes volver a agregar una leyenda con los mismos colores.
 4. **Vista lógica, ViajeServicio.** Clic derecho → *Presentation Options → Attributes → Hide all*. Después, en *Operations → Customized…*, oculta `obtenerViaje(id : Long) : Viaje`, que es privado. Así queda solo con sus métodos públicos, como pide la consigna.
 5. Si alguna clase de la vista de desarrollo vuelve a mostrar sus miembros: selecciónala → *Presentation Options → Attributes / Operations → Hide all*.
 6. Guarda (Ctrl+S) y exporta cada diagrama: *Project → Export → Active Diagram as Image*, con PNG en la misma ruta de `imagenes/`.
@@ -61,7 +61,7 @@ El conector MCP de VP no aplica colores ni oculta miembros, así que estos pasos
 | 5 | ViajeServicio «Controlador»: `solicitar` | `servicio/ViajeServicio.java:75` (busca la tarifa vigente en la línea 86) |
 | 6 | Despacho `<<use>>` Turnos y Vehículos | `servicio/ViajeServicio.java:95` `asignarVehiculo()` (líneas 103 y 106) |
 | 7 | Pagos `<<use>>` Despacho, sin colección | `servicio/PagoServicio.java:43` → `ViajeRepositorio.findByPagoId` (`repositorio/ViajeRepositorio.java:31`) |
-| 8 | GeneradorIds «Fabricación pura» | `repositorio/GeneradorIds.java:38` `siguienteId()` |
+| 8 | GeneradorIds «Fabricación pura» | `repositorio/GeneradorIds.java:29` constructor `GeneradorIds(MongoOperations)` y línea 38 `siguienteId()` |
 | 9 | AsignadorIdsMongo (vista de desarrollo) | `repositorio/AsignadorIdsMongo.java:26` `onBeforeConvert()` |
 | 10 | Vite proxy `/api` → :8080 (despliegue) | `frontend/vite.config.js:8-11` |
 | 11 | Driver MongoDB → Atlas (despliegue) | `backend/src/main/resources/application.yml:17` (`MONGODB_URI`) |
@@ -87,3 +87,14 @@ El conector MCP de VP no aplica colores ni oculta miembros, así que estos pasos
   - Los flujos ahora nombran sus endpoints.
   - Se agregó la nota de HU-14.
   - En el flujo del Administrador también aparecen pasajeros y "anular pago" (`PATCH /api/pagos/{id}/anular`), porque esos endpoints existen.
+
+## f) Ajustes del 25-11-2026
+
+| # | Pedido | Resultado |
+|---|---|---|
+| 1 | Borrar las leyendas | Hecho. Se borraron las 20 notas de leyenda de las vistas lógica (5), desarrollo (7), funcional (4) y despliegue (4). Las demás notas siguen. |
+| 2 | Completar GeneradorIds en la vista lógica | Hecho. Muestra `-mongo : MongoOperations`, `+siguienteId(coleccion : String) : long` y `+GeneradorIds(mongo : MongoOperations)`, igual que `repositorio/GeneradorIds.java` (líneas 23, 29 y 38). |
+| 3 | Multiplicidad `1` del lado de Tarifa | El modelo ya tenía `1`, pero la etiqueta quedaba tapada por el nombre. Se corrió `Tarifa` 90 px a la derecha y se volvió a trazar la línea: ahora se lee `0..*` junto a Viaje y `1` junto a Tarifa. |
+| 4 | Ocultar los 5 atributos privados y `obtenerViaje` de ViajeServicio | **No se pudo.** Visual Paradigm guarda la opción de ocultar, pero al exportar los sigue dibujando. Se dejó como estaba; hay que hacerlo a mano (paso 4 de la sección b). |
+| 5 | `<<node>>` en Servidor de aplicación y MongoDB Atlas | Hecho. `<<device>>` queda solo en "Equipo del usuario". |
+| 6 | Separar Pagos → Despacho y Despacho → Pasajeros | Hecho. Los tramos horizontales van a 100 px de distancia (y = 520 y 620) y cada línea entra por su propio carril. La colección `viajes` se angostó para que ninguna línea pase pegada a su borde. |
