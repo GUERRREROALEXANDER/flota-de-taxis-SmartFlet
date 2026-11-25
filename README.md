@@ -390,7 +390,27 @@ Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual
 | 4 | Desarrollo | Diagrama de paquetes | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
 | 5 | Despliegue | Diagrama de despliegue | ¿Dónde corre cada pieza y cómo se comunican? |
 
-Los PNG exportados y la vista previa de cada una están en [`docs/diagramas/README.md`](docs/diagramas/README.md).
+### 1 — Vista de contexto
+
+![Vista de contexto](docs/diagramas/imagenes/1-vista-contexto/vista-contexto.png)
+
+### 2 — Vista funcional
+
+![Vista funcional](docs/diagramas/imagenes/2-vista-funcional/vista-funcional.png)
+
+### 3 — Vista lógica
+
+![Vista lógica](docs/diagramas/imagenes/3-vista-logica/vista-logica.png)
+
+### 4 — Vista de desarrollo
+
+![Vista de desarrollo](docs/diagramas/imagenes/4-vista-desarrollo/vista-desarrollo.png)
+
+### 5 — Vista de despliegue
+
+![Vista de despliegue](docs/diagramas/imagenes/5-vista-despliegue/vista-despliegue.png)
+
+La explicación de cada vista está en [`docs/diagramas/README.md`](docs/diagramas/README.md). Las marcas de agua "evaluation copy" las pone la licencia de evaluación de Visual Paradigm.
 
 ---
 ## Licencia
