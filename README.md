@@ -372,7 +372,7 @@ Prioridad según la escala **MoSCoW**: **Alta** (imprescindible para el MVP), **
 
 ## 8. Vistas de arquitectura
 
-Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/smartflet-diagramas.vpp`](docs/diagramas/smartflet-diagramas.vpp), a partir del código actual:
+Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual-paradigm/smartflet-diagramas.vpp`](docs/diagramas/visual-paradigm/smartflet-diagramas.vpp), a partir del código actual:
 
 | # | Vista | Diagrama | Responde |
 |---|---|---|---|

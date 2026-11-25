@@ -1,13 +1,13 @@
 # Corrección de las 5 vistas de arquitectura (SmartFlet)
 
-Todo está en `smartflet-diagramas.vpp` (Visual Paradigm 18.1). Los PNG de cada carpeta se exportaron desde ese archivo.
+Todo está en `visual-paradigm/smartflet-diagramas.vpp` (Visual Paradigm 18.1). Los PNG de `imagenes/` se exportaron desde ese archivo.
 La vista lógica y la de desarrollo se verificaron de forma automática contra el código: las 18 clases dibujadas tienen los mismos atributos, tipos, métodos y constructores que los `.java`.
 
 ## b) Pasos que faltan hacer a mano en Visual Paradigm
 
 El conector MCP de VP no aplica colores ni oculta miembros, así que estos pasos se hacen a mano:
 
-1. Abre `docs/diagramas/smartflet-diagramas.vpp`.
+1. Abre `docs/diagramas/visual-paradigm/smartflet-diagramas.vpp`.
 2. **Colores.** Selecciona las figuras de cada capa → clic derecho → *Styles and Formatting → Formats… → Fill* → color sólido:
    - Controlador: azul claro `#D6E9FF`
    - Servicio: verde claro `#DDF5DD`
@@ -20,7 +20,7 @@ El conector MCP de VP no aplica colores ni oculta miembros, así que estos pasos
 3. **Leyenda.** En las vistas lógica, de desarrollo, funcional y de despliegue hay una pila de notas "Leyenda". Pinta cada nota con el color que nombra su texto.
 4. **Vista lógica, ViajeServicio.** Clic derecho → *Presentation Options → Attributes → Hide all*. Después, en *Operations → Customized…*, oculta `obtenerViaje(id : Long) : Viaje`, que es privado. Así queda solo con sus métodos públicos, como pide la consigna.
 5. Si alguna clase de la vista de desarrollo vuelve a mostrar sus miembros: selecciónala → *Presentation Options → Attributes / Operations → Hide all*.
-6. Guarda (Ctrl+S) y exporta cada diagrama: *Project → Export → Active Diagram as Image*, con PNG en la misma ruta.
+6. Guarda (Ctrl+S) y exporta cada diagrama: *Project → Export → Active Diagram as Image*, con PNG en la misma ruta de `imagenes/`.
 
 ## c) Qué explicar de cada vista (para el profesor)
 
