@@ -2,6 +2,8 @@
 
 > **Estado:** En desarrollo. Backend Spring Boot con API REST sobre MongoDB (vehículos, rutas, pasajeros, conductores, turnos, tarifas, viajes y pagos) y frontend web (carpeta `frontend/`) con panel, viajes, turnos, vehículos, conductores, rutas, pasajeros, tarifas, pagos y reportes.
 > Lo que aún no está implementado se indica como **(pendiente)**.
+>
+> 📖 Documentación completa y ordenada en la **[Wiki del proyecto](https://github.com/GUERRREROALEXANDER/flota-de-taxis-SmartFlet/wiki)**.
 
 ---
 
@@ -14,7 +16,7 @@
 5. [Estructura de directorios](#5-estructura-de-directorios)
 6. [Historias de usuario](#6-historias-de-usuario)
 7. [Requerimientos funcionales](#7-requerimientos-funcionales)
-8. [Diagramas UML](#8-diagramas-uml)
+8. [Vistas de arquitectura](#8-vistas-de-arquitectura)
 
 ---
 
@@ -197,7 +199,11 @@ flota-de-taxis-SmartFlet/
 │       ├── componentes/         # Tablas, formularios, gráficas, avisos
 │       ├── vistas/              # Una pantalla por módulo (viajes.js, turnos.js...)
 │       └── estilos/             # app.css
-└── docs/diagramas/              # 5 vistas de arquitectura (Visual Paradigm)
+└── docs/
+    ├── diagramas/
+    │   ├── visual-paradigm/     # Proyecto .vpp de Visual Paradigm y respaldos/
+    │   └── imagenes/            # PNG de las 5 vistas
+    └── postman/                 # Colección y entorno de Postman
 ```
 
 Pendiente: autenticación y roles, ubicación en tiempo real y mantenimiento de vehículos.
@@ -379,7 +385,7 @@ Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual
 | 1 | Contexto | Diagrama de contexto (DFD nivel 0) | ¿Con quién intercambia información SmartFlet? |
 | 2 | Funcional | Diagrama de componentes | ¿Qué módulos tiene y qué servicios se piden entre ellos? |
 | 3 | Lógica | Diagrama de clases con estereotipos GRASP | ¿Qué clases del dominio hay y qué responsabilidad tiene cada una? |
-| 4 | Desarrollo | Diagrama de clases por capas | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
+| 4 | Desarrollo | Diagrama de paquetes | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
 | 5 | Despliegue | Diagrama de despliegue | ¿Dónde corre cada pieza y cómo se comunican? |
 
 Los PNG exportados y la vista previa de cada una están en [`docs/diagramas/README.md`](docs/diagramas/README.md).
