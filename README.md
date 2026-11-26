@@ -9,6 +9,22 @@
 
 ---
 
+## Guía rápida: dónde está cada cosa
+
+| Qué busca | Dónde está | Para qué sirve |
+|---|---|---|
+| **Las 5 vistas de arquitectura (imágenes)** | [Sección 8](#8-vistas-de-arquitectura) y [`docs/diagramas/imagenes/`](docs/diagramas/imagenes) | Ver los diagramas directamente en GitHub. |
+| **Proyecto de Visual Paradigm** | [`docs/diagramas/visual-paradigm/smartflet-diagramas.vpp`](docs/diagramas/visual-paradigm/smartflet-diagramas.vpp) | Abrir y editar las 5 vistas en Visual Paradigm. |
+| **Explicación de cada vista** | [`docs/diagramas/README.md`](docs/diagramas/README.md) | Qué muestra cada diagrama y cómo leerlo. |
+| **Presentación de diseño** | [`docs/presentacion/SmartFlet_Presentacion_Diseno.pptx`](docs/presentacion/SmartFlet_Presentacion_Diseno.pptx) | Las 5 vistas en diapositivas, con notas del orador. |
+| **Historias de usuario y requerimientos** | [Sección 6](#6-historias-de-usuario) y [Sección 7](#7-requerimientos-funcionales) | Qué debe hacer el sistema. |
+| **Código del backend** | [`backend/`](backend) | API REST en Spring Boot (controlador → servicio → repositorio). |
+| **Código del frontend** | [`frontend/`](frontend) | Interfaz web en JavaScript + Vite. |
+| **Pruebas de la API** | [`docs/postman/`](docs/postman) | Colección y entornos de Postman. |
+| **Cómo ejecutarlo** | [Sección 4](#4-instalación-configuración-y-ejecución) | Requisitos, configuración y comandos. |
+
+---
+
 ## Tabla de contenido
 
 1. [Descripción general](#1-descripción-general)
@@ -392,21 +408,31 @@ Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual
 
 ### 1 — Vista de contexto
 
+SmartFlet es el círculo del centro (un solo proceso). Alrededor están las seis entidades externas, y cada flecha dice qué información entra o sale.
+
 ![Vista de contexto](docs/diagramas/imagenes/1-vista-contexto/vista-contexto.png)
 
 ### 2 — Vista funcional
+
+Los módulos del sistema como componentes: el frontend usa la interfaz `/api/...` de cada módulo, y las líneas `<<use>>` muestran qué módulo depende de cuál.
 
 ![Vista funcional](docs/diagramas/imagenes/2-vista-funcional/vista-funcional.png)
 
 ### 3 — Vista lógica
 
+Las clases del dominio con sus atributos, asociaciones y multiplicidad, y el patrón GRASP de cada una (Experto, Creador, Controlador, Fabricación pura).
+
 ![Vista lógica](docs/diagramas/imagenes/3-vista-logica/vista-logica.png)
 
 ### 4 — Vista de desarrollo
 
+El código organizado en carpetas (paquetes) por capas: controlador → servicio → repositorio, más seguridad, `dto` y `excepcion`. Las relaciones son de diagrama de clases: agregación, composición y generalización.
+
 ![Vista de desarrollo](docs/diagramas/imagenes/4-vista-desarrollo/vista-desarrollo.png)
 
 ### 5 — Vista de despliegue
+
+Tres nodos (equipo del usuario, servidor AWS EC2 y AWS Parameter Store) y el canal de comunicación entre ellos, con protocolo y puerto.
 
 ![Vista de despliegue](docs/diagramas/imagenes/5-vista-despliegue/vista-despliegue.png)
 

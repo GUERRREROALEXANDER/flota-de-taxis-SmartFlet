@@ -15,7 +15,7 @@ Las marcas de agua "evaluation copy" las pone la licencia de evaluación de Visu
 **Presentación:** [`../presentacion/SmartFlet_Presentacion_Diseno.pptx`](../presentacion/SmartFlet_Presentacion_Diseno.pptx) reúne las cinco vistas en este mismo orden. Cada diapositiva lleva notas del orador.
 
 ## 1 — Vista de contexto
-SmartFlet es un único proceso. A su alrededor están las seis entidades externas que le envían y reciben información:
+SmartFlet es un único proceso, dibujado como el círculo del centro. A su alrededor (dos arriba, dos a los lados y dos abajo) están las seis entidades externas que le envían y reciben información:
 - el usuario sin sesión, que inicia sesión;
 - el administrador, el pasajero, el conductor y el operador de central;
 - AWS Parameter Store, de donde sale la clave inicial del administrador.
