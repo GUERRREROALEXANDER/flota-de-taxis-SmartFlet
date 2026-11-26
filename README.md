@@ -203,7 +203,7 @@ flota-de-taxis-SmartFlet/
 │       └── estilos/             # app.css
 └── docs/
     ├── diagramas/
-    │   ├── visual-paradigm/     # Proyecto .vpp de Visual Paradigm y respaldos/
+    │   ├── visual-paradigm/     # Proyecto .vpp de Visual Paradigm con las 5 vistas
     │   └── imagenes/            # PNG de las 5 vistas
     └── postman/                 # Colección y entorno de Postman
 ```
@@ -380,14 +380,14 @@ Prioridad según la escala **MoSCoW**: **Alta** (imprescindible para el MVP), **
 
 ## 8. Vistas de arquitectura
 
-Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual-paradigm/smartflet-diagramas.vpp`](docs/diagramas/visual-paradigm/smartflet-diagramas.vpp), a partir del código actual:
+Las cinco vistas están modeladas en Visual Paradigm, en [`docs/diagramas/visual-paradigm/smartflet-diagramas.vpp`](docs/diagramas/visual-paradigm/smartflet-diagramas.vpp), a partir del código de la rama `feature/login-y-despliegue-aws` (con inicio de sesión por roles y despliegue en AWS):
 
 | # | Vista | Diagrama | Responde |
 |---|---|---|---|
 | 1 | Contexto | Diagrama de contexto (DFD nivel 0) | ¿Con quién intercambia información SmartFlet? |
 | 2 | Funcional | Diagrama de componentes | ¿Qué módulos tiene y qué servicios se piden entre ellos? |
 | 3 | Lógica | Diagrama de clases con estereotipos GRASP | ¿Qué clases del dominio hay y qué responsabilidad tiene cada una? |
-| 4 | Desarrollo | Diagrama de paquetes | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
+| 4 | Desarrollo | Diagrama de clases por capas (paquetes) | ¿Cómo está organizado el código (controlador → servicio → repositorio)? |
 | 5 | Despliegue | Diagrama de despliegue | ¿Dónde corre cada pieza y cómo se comunican? |
 
 ### 1 — Vista de contexto
