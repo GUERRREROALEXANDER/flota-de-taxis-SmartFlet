@@ -4,8 +4,6 @@
 > Lo que aún no está implementado se indica como **(pendiente)**.
 >
 > 🌐 **Aplicación en línea:** [http://3.150.79.12](http://3.150.79.12)
->
-> 📖 Documentación completa y ordenada en la **[Wiki del proyecto](https://github.com/GUERRREROALEXANDER/flota-de-taxis-SmartFlet/wiki)**.
 
 ---
 
