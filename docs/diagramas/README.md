@@ -27,7 +27,6 @@ Cada flujo de datos lleva el nombre de lo que viaja por él, en ambos sentidos.
 ## 2 — Vista funcional
 - El frontend consume por HTTP/JSON la interfaz `/api/...` (bola) de cada uno de los nueve módulos del backend.
 - Las líneas `<<use>>` son las dependencias reales entre servicios. Por ejemplo, Viajes valida el pasajero, la tarifa vigente, el vehículo y su turno.
-- Debajo de cada módulo está la colección de MongoDB que persiste. Pagos no tiene colección propia porque el pago va embebido en el viaje.
 - Spring Security valida la sesión y el rol en cada petición; la nota del diagrama lo explica.
 
 ![Vista funcional](imagenes/2-vista-funcional/vista-funcional.png)
