@@ -12,6 +12,8 @@ Las cinco vistas están en un solo proyecto de Visual Paradigm 18.1: [`visual-pa
 
 Las marcas de agua "evaluation copy" las pone la licencia de evaluación de Visual Paradigm.
 
+**Presentación:** [`../presentacion/SmartFlet_Presentacion_Diseno.pptx`](../presentacion/SmartFlet_Presentacion_Diseno.pptx) reúne las cinco vistas, en este mismo orden, con el formato de la presentación de diseño del curso. Cada diapositiva lleva notas del orador.
+
 ## 1 — Vista de contexto
 SmartFlet como un solo proceso y los cuatro roles que le envían y reciben información; cada flujo nombra el endpoint REST que lo implementa.
 
