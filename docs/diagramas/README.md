@@ -45,7 +45,10 @@ Las capas del backend, con las clases y sus miembros:
 - **Capas principales:** presentación (`controlador`, `<<RestController>>`) → negocio (`servicio`, `<<Service>>`) → datos (`repositorio`, interfaces que extienden `MongoRepository`) → base MongoDB.
 - **Seguridad:** configuración de Spring Security, control de intentos y creación del administrador inicial.
 - **Paquetes de apoyo:** `dto` y `excepcion`. El paquete `modelo` es el de la vista lógica.
-- **Conexiones:** cada flecha va de la clase que usa a la dependencia que Spring le inyecta; el `1` es la multiplicidad (una instancia). Todos los repositorios heredan de `MongoRepository`.
+- **Relaciones (como en un diagrama de clases):**
+  - Agregación (rombo blanco): de cada clase hacia la dependencia que Spring le inyecta. La usa, pero no la crea ni controla su vida. El `1` es la multiplicidad.
+  - Composición (rombo negro): `ControlIntentos` con sus `Registro` (`0..*`), que crea y desaparecen con él.
+  - Generalización: cada repositorio hereda de `MongoRepository`.
 
 ![Vista de desarrollo](imagenes/4-vista-desarrollo/vista-desarrollo.png)
 
